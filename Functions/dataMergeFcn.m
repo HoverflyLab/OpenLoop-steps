@@ -1,7 +1,24 @@
-% OL Step 3 - Creating the .mat file
-% This script is to be used after step 2, where the .csv files have been
-% made after analysing them using Deep Lab Cut (DLC). This script will
-% package both the raw data and calculated data into a single file
+% OL Step 3 - Creating the .mat file: Written by Raymond Aoukar : June 2023
+% After the videos have been analyzed the CSV files containing the data will be located.
+% This process works by checking for the keyword (Case sensitive) associated with each model.
+% e.g Wings, Head, Backlegs, Frontlegs.
+%
+% This allows us to grab the relevant CSV files if they exist and make some
+% assumptions about the point data that they contain e.g. we know that the
+% CSV files created by the wings model should contain the following points in order
+% Wings_Hinge_Right, Wings_Distal_Right, Wings_Hinge_Left, Wings_Distal_Left, Wings_Thorax_Upper, Wings_Thorax_Lower 
+%
+% After we have found each CSV file we then read in and calculate the required values one row at a time.
+% Making sure to keep the Raw data seperate from our calculations.
+% Once we have read in each row we then package the raw data into the data_block and calculations into the unit_block.
+%
+% The resulting .mat file will contain data_blocks, unit_blocks and ticktime_blocks.
+% data_blocks contain the raw data e.g. x,y,confidence for each label.
+% unit_blocks contain calculated data e.g. WBA_Right, WBA_Right_Confidence, Axis_Angle, Axis_Angle_Confidence.
+% Note: Confidence values for calculations are obtained by multiplying the relevant confidence values together.
+% ticktime_blocks are equal to the trial start time since epoch 
+
+function dataMergeFcn()
 
 %Let the user know what is going on
 disp('We will now begin creating the VideoName_DLC_Analysis.mat file')

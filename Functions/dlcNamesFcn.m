@@ -27,7 +27,7 @@ labels = labels(1);
 
 % Split labels into a string array
 labels = split(labels, "- ");
-% Remove any empty entries
-labels(all(strcmp(labels,""),2),:) = [];
 % Remove any whitespace from strings
 labels = strtrim(labels);
+% Remove any empty entries
+labels(all(strcmp(labels,""),2),:) = [];

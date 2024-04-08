@@ -12,7 +12,7 @@
 % e.g. the filepath variable contains the full filepath leading to the config.yaml file.
 % nooflabels, labels and calculations also must be accurate.
 
-function dlcAnalysisFcn(modelList)
+function videoPath = dlcAnalysisFcn(modelList)
 % Hard Coded Variables (must be accurate)
 AnacondaEnvironment = 'DLC2';       % Name of the Anaconda Environment that houses the version of DLC we wish to use.
 VideoType = '.mp4';                 % Used to identify video files
@@ -20,20 +20,20 @@ MaximumSubFolderDepth = 8;          % Safety to stop this script grabbing too ma
 MaximumFolderCount = 500;           % Safety to stop this script grabbing too many video files
 IpythoncommandsFilePath = '/home/hoverfly/Desktop/MatlabScripts/OpenLoop/Ipythoncommands.py'; % This script is essential for DLC Analysis to run
 
-%Skippause can be used to toggle pauses on or off allowing you to more easily follow along with the output.
+% Skippause can be used to toggle pauses on or off allowing you to more easily follow along with the output.
 Skippause = 1; % 0 for false (pause) : 1 for true (don't pause)
 
 % Model Information (must be accurate)
-%A list of the DLC models each video should be analysed by
-%keyword refers to a Unique ID that can be used to identify each model's .csv files
+% A list of the DLC models each video should be analysed by
+% keyword refers to a Unique ID that can be used to identify each model's .csv files
 
 % Variables
 videoList = [];
 
-%Get size of ModelList (we are only interested in Y value)
+% Get size of ModelList (we are only interested in Y value)
 [~, modelListSize] = size(modelList);
-Totalnumberofcalculations = 0;
-Totalnumberofrawdatapoints = 0;
+totalNumberOfCalculations = 0;
+totalNumberOfRawDataPoints = 0;
 
 if ~isfile(IpythoncommandsFilePath)
     warning('IpythoncommandsFilePath is not valid')
@@ -52,15 +52,15 @@ for i = 1:modelListSize
     disp(' ');
     
     %Get the total number of calculations that will be required
-    Totalnumberofcalculations = Totalnumberofcalculations + modelList(i).calculations;
-    Totalnumberofrawdatapoints = Totalnumberofrawdatapoints + (modelList(i).nooflabels * 3); %each label has a value for (x,y,confidence)
+    totalNumberOfCalculations = totalNumberOfCalculations + modelList(i).calculations;
+    totalNumberOfRawDataPoints = totalNumberOfRawDataPoints + (modelList(i).nooflabels * 3); %each label has a value for (x,y,confidence)
     
     %Get a list of all the labels
-    if i == 1
-        DLC_Field_Names = modelList(1).labels;
-    else
-        DLC_Field_Names = strcat(DLC_Field_Names,',',modelList(i).labels);
-    end 
+%     if i == 1
+%         DLC_Field_Names = modelList(1).labels;
+%     else
+%         DLC_Field_Names = strcat(DLC_Field_Names,',',modelList(i).labels);
+%     end 
     pause(1);
 end
 
@@ -79,36 +79,36 @@ end
 
 Temp = strsplit(inputFolderPath,'/');
 
-%Add only the Initial Directory to list
+% Add only the Initial Directory to list
 DirectoryList = dir(fullfile(inputFolderPath));
 DirectoryList = DirectoryList(2);
 DirectoryList(1).name = Temp{end};
 DirectoryList(1).filepath = inputFolderPath;
 
-%Set initial DirectoryCount
+% Set initial DirectoryCount
 PrevDirectoryCount = 0;
 
-%Find all valid Folders upto the MaximumSubFolderDepth
+% Find all valid Folders upto the MaximumSubFolderDepth
 for i = 1:MaximumSubFolderDepth
     
-    %Set NewDirectoryCount which is the current number of valid Directories
+    % Set NewDirectoryCount which is the current number of valid Directories
     NewDirectoryCount = size(DirectoryList,1);
     
-    %Safety Check to make sure we don't accidently add every folder on the system by selecting a folder that is too high up the hierarchy.
+    % Safety Check to make sure we don't accidently add every folder on the system by selecting a folder that is too high up the hierarchy.
     if(NewDirectoryCount > MaximumFolderCount)
         warning('Warning - Tried to search %i folders when the Maximum is %i. If you selected the right folder, remove this check or increase MaximumFolderCount',NewDirectoryCount,MaximumFolderCount);
         return;
     end
     
-    %For each of the new directories we have not already searched
+    % For each of the new directories we have not already searched
     for j = PrevDirectoryCount+1:NewDirectoryCount
-        %Locate valid directories within the provided folder and add them to the DirectoryList.
+        % Locate valid directories within the provided folder and add them to the DirectoryList.
         DirectoryList = [DirectoryList;FindSubFolders(DirectoryList(j).filepath,0)];
     end
     
-    %Update PrevDirectoryCount so we know which folders have been searched.
+    % Update PrevDirectoryCount so we know which folders have been searched.
     PrevDirectoryCount = NewDirectoryCount;  
-    %Move on to next loop in order to search the new folders that were added this loop
+    % Move on to next loop in order to search the new folders that were added this loop
 end
 
 app.analysisProgressLabel.Text = sprintf('Total number of directories being searched is %i\n',size(DirectoryList,1));
@@ -169,10 +169,10 @@ for i = 1:size(videoList)
     for j = 1:modelListSize
         
         TempModelPath = modelList(j).filePath;    
-        %Create the command deeplabcut required to analyze a video
+        % Create the command deeplabcut required to analyze a video
         TempCommand = ['deeplabcut.analyze_videos(',34,TempModelPath,34,',[',34,TempVideoPath,34,'],save_as_csv=True)'];
 
-        %Passes through command responsible for Analysing each video 
+        % Passes through command responsible for Analysing each video 
         unix(strcat(AnalysisCommand,TempCommand,''''),'-echo'); % concatenate analysis command and temp command then encapsulation the argument in '
 
     end 
@@ -187,7 +187,7 @@ for i = 1:size(videoList)
 end
 
 if Skippause == 0
-    pause(2); %This is here only so you can see how many videos are about to be analysed
+    pause(2); % This is here only so you can see how many videos are about to be analysed
 end
 
 if Skippause == 0
@@ -203,9 +203,9 @@ pathName = pathName{1};
 fileName = "analysisPaths_" + string(datetime('now')) + ".mat";
 filePath = append(pathName, fileName);
 
-%Save required variables for OLStep 3
+% Save required variables for OLStep 3
 save(filePath, "videoList", "modelList", "modelListSize", ...
-    "Totalnumberofcalculations", "Totalnumberofrawdatapoints")
+    "totalNumberOfCalculations", "totalNumberOfRawDataPoints")
 
-app.analysisProgressLabel.Text = ...
-    sprintf('Analysis complete, file required for OLStep3 saved as %s', fileName);
+videoPath = filePath;
+fprintf('Analysis complete, file required for OLStep3 saved as %s\n', filePath);

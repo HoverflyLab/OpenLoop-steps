@@ -55,12 +55,6 @@ for i = 1:modelListSize
     totalNumberOfCalculations = totalNumberOfCalculations + modelList(i).calculations;
     totalNumberOfRawDataPoints = totalNumberOfRawDataPoints + (modelList(i).nooflabels * 3); %each label has a value for (x,y,confidence)
     
-    %Get a list of all the labels
-%     if i == 1
-%         DLC_Field_Names = modelList(1).labels;
-%     else
-%         DLC_Field_Names = strcat(DLC_Field_Names,',',modelList(i).labels);
-%     end 
     pause(1);
 end
 

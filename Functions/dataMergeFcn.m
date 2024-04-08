@@ -25,19 +25,21 @@ disp('We will now begin creating the VideoName_DLC_Analysis.mat file')
 
 % NEEDS TO BE ACCURATE
 VideoResolution = [320,240];        % Used to invert Y values by using the frame height
+videoType = '.mp4';                 % Used to identify video files
 
-load(filePath)
+load(filePath, "videoList", "modelList", "modelListSize", ...
+    "totalNumberOfCalculations", "totalNumberOfRawDataPoints")
 
 % Search each folder and locate all valid .csv files.
 % For each valid video provided
-for i = 1:size(VideoList)
+for i = 1:size(videoList)
     
     % Find all files within the folder
-    TempFileList = dir(fullfile(VideoList(i).folderpath));
+    TempFileList = dir(fullfile(videoList(i).folderpath));
     TempCSVFiles = [];
     
     % Seperate the name of the file from its file extension e.g. .mp4
-    TempFileName = strsplit(VideoList(i).name,VideoType);
+    TempFileName = strsplit(videoList(i).name,videoType);
     TempFileName = TempFileName{1};
     
     % Search through each file in the directory and find the csv files
@@ -50,12 +52,12 @@ for i = 1:size(VideoList)
             % If the file is a csv e.g. contains .csv
             if not(isempty(strfind(TempFileList(j).name,'.csv')))
                 
-                for k = 1:ModelListSize
+                for k = 1:modelListSize
                     
                     % If the csv contains the keyword e.g. Wings, Head, Hindlegs, Frontlegs.
-                    if not(isempty(strfind(TempFileList(j).name,ModelList(k).keyword)))
-                        TempCSVFiles(k).keyword = ModelList(k).keyword;
-                        TempCSVFiles(k).filepath = strcat(VideoList(i).folderpath,'/',TempFileList(j).name);   
+                    if not(isempty(strfind(TempFileList(j).name,modelList(k).keyword)))
+                        TempCSVFiles(k).keyword = modelList(k).keyword;
+                        TempCSVFiles(k).filepath = strcat(videoList(i).folderpath,'/',TempFileList(j).name);   
                     end
                 end
             end
@@ -67,7 +69,7 @@ for i = 1:size(VideoList)
     
     % Before we begin analysis
     % Check if we have the correct amount of CSV files (there should be one file for each model).
-    if CSVListSize == ModelListSize
+    if CSVListSize == modelListSize
         
         % Read in CSV data leaving out header text, we are assuming labels are in the correct order.
         TempWingsCSV = csvread(TempCSVFiles(1).filepath,3,0);
@@ -78,8 +80,8 @@ for i = 1:size(VideoList)
         % Initialise entire data set with arbitrary values, stops the script from continuously allocating memory later on.
         % All csv files should be the same size
         [Totalframes,~] = size(TempWingsCSV);
-        DLC_RawData(Totalframes,1:Totalnumberofrawdatapoints) = zeros(1,Totalnumberofrawdatapoints);
-        DLC_Calculations(Totalframes,1:Totalnumberofcalculations) = zeros(1,Totalnumberofcalculations);
+        DLC_RawData(Totalframes,1:totalNumberOfRawDataPoints) = zeros(1,totalNumberOfRawDataPoints);
+        DLC_Calculations(Totalframes,1:totalNumberOfCalculations) = zeros(1,totalNumberOfCalculations);
         
         % For each row in the CSV files we run the following calculations
         for Row = 1:Totalframes
@@ -95,8 +97,8 @@ for i = 1:size(VideoList)
             Calculations = [Wings_Calculations, Head_Calculations, Hindlegs_Calculations, Frontlegs_Calculations];
             
             % Override current row with the processed data output.
-            DLC_RawData(Row,1:Totalnumberofrawdatapoints) = RawData;
-            DLC_Calculations(Row,1:Totalnumberofcalculations) =  Calculations;
+            DLC_RawData(Row,1:totalNumberOfRawDataPoints) = RawData;
+            DLC_Calculations(Row,1:totalNumberOfCalculations) =  Calculations;
 
         end
         

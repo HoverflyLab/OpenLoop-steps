@@ -1,10 +1,13 @@
-function [Head_RawData, Head_Calculations] = ProcessHeadData(TempHeadCSV, Row , FrameHeight, Axis_Angle)
+function [Head_RawData, Head_Calculations, Axis_Angle] = ProcessHeadData(TempHeadCSV, Row , FrameHeight, Axis_Angle, calculations)
 %PROCESSHEADDATA Calculates the line of best fit for the Head
 
     %% IMPORTANT - DLC Y values are inverted so we need to take the Y
     %value given from the resolution of the frame, this allows us to work with Y values that
     %match standard graphing conventions. e.g. X value increases left to right, Y value increases bottom to top.
     
+    % Set these to 0 in case calculations aren't required by user
+    Head_Calculations = 0;
+
     %% Read in Head label data
     Head_Midline_Anterior_1_X = TempHeadCSV(Row,2);
     Head_Midline_Anterior_1_Y = FrameHeight - TempHeadCSV(Row,3);
@@ -38,19 +41,20 @@ function [Head_RawData, Head_Calculations] = ProcessHeadData(TempHeadCSV, Row , 
     Head_RawData = [Head_RawData, Head_Midline_5_X, Head_Midline_5_Y, Head_Midline_5_Confidence];
     Head_RawData = [Head_RawData, Head_Midline_Posterior_6_X, Head_Midline_Posterior_6_Y, Head_Midline_Posterior_6_Confidence];
     
-    %% HEAD LINE OF BEST FIT CALCULATIONS
-    %Calculate confidence value (by multiplying confidence of each point together)
-    %Calculate average slope of all points
-    ConfidenceArray = [Head_Midline_Anterior_1_Confidence,Head_Midline_2_Confidence,Head_Midline_3_Confidence,Head_Midline_4_Confidence,Head_Midline_5_Confidence,Head_Midline_Posterior_6_Confidence];
-    Head_Slope_Confidence = prod(ConfidenceArray); % prod returns the multiple of all elements
-    
-    SumOfAllX = Head_Midline_Anterior_1_X + Head_Midline_2_X + Head_Midline_3_X + Head_Midline_4_X + Head_Midline_5_X + Head_Midline_Posterior_6_X;
-    SumOfAllY = Head_Midline_Anterior_1_Y + Head_Midline_2_Y + Head_Midline_3_Y + Head_Midline_4_Y + Head_Midline_5_Y + Head_Midline_Posterior_6_Y;
-    
-    Head_Slope = (atand(SumOfAllX / SumOfAllY)) - Axis_Angle;
-    
-    %% Assemble
-    Head_Calculations = [Head_Slope, Head_Slope_Confidence];
-    
+    if calculations ~= 0
+        %% HEAD LINE OF BEST FIT CALCULATIONS
+        %Calculate confidence value (by multiplying confidence of each point together)
+        %Calculate average slope of all points
+        ConfidenceArray = [Head_Midline_Anterior_1_Confidence,Head_Midline_2_Confidence,Head_Midline_3_Confidence,Head_Midline_4_Confidence,Head_Midline_5_Confidence,Head_Midline_Posterior_6_Confidence];
+        Head_Slope_Confidence = prod(ConfidenceArray); % prod returns the multiple of all elements
+        
+        SumOfAllX = Head_Midline_Anterior_1_X + Head_Midline_2_X + Head_Midline_3_X + Head_Midline_4_X + Head_Midline_5_X + Head_Midline_Posterior_6_X;
+        SumOfAllY = Head_Midline_Anterior_1_Y + Head_Midline_2_Y + Head_Midline_3_Y + Head_Midline_4_Y + Head_Midline_5_Y + Head_Midline_Posterior_6_Y;
+        
+        Head_Slope = (atand(SumOfAllX / SumOfAllY)) - Axis_Angle;
+        
+        %% Assemble
+        Head_Calculations = [Head_Slope, Head_Slope_Confidence];
+    end
 end
 

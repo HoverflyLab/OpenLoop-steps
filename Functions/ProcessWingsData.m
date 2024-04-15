@@ -1,6 +1,8 @@
-function [Wings_RawData, Wings_Calculations, Axis_Angle] = ProcessWingData(TempWingsCSV, Row, FrameHeight)
+function [Wings_RawData, Wings_Calculations, Axis_Angle] = ProcessWingsData(TempWingsCSV, Row, FrameHeight, ~, calculations)
 %PROCESSWINGDATA Calculates Right and Left Wing Beat Amplitude
-
+    % Set these to 0 in case calculations aren't required by user
+    Wings_Calculations = '0';
+    Axis_Angle = '0';
     %% IMPORTANT - DLC Y values are inverted so we need to take the Y
     %value given from the resolution of the frame, this allows us to work with Y values that
     %match standard graphing conventions. e.g. X value increases left to right, Y value increases bottom to top.
@@ -44,46 +46,47 @@ function [Wings_RawData, Wings_Calculations, Axis_Angle] = ProcessWingData(TempW
     %Wing SlopeWidth and SlopeHeight
     %Calculate the WBA using the slopes
     
-    %% Calculate confidence values (by multiplying confidence of each point together).
-    WBA_Right_Confidence = Wings_Hinge_Right_Confidence * Wings_Distal_Right_Confidence;
-    WBA_Left_Confidence = Wings_Hinge_Left_Confidence * Wings_Distal_Left_Confidence;
-    Axis_Angle_Confidence = Wings_Thorax_Upper_Confidence * Wings_Thorax_Lower_Confidence;
+    if calculations ~= 0
+        %% Calculate confidence values (by multiplying confidence of each point together).
+        WBA_Right_Confidence = Wings_Hinge_Right_Confidence * Wings_Distal_Right_Confidence;
+        WBA_Left_Confidence = Wings_Hinge_Left_Confidence * Wings_Distal_Left_Confidence;
+        Axis_Angle_Confidence = Wings_Thorax_Upper_Confidence * Wings_Thorax_Lower_Confidence;
+        
+        
+        %% LongitudinalAxis Slope (Theta_Angle)
+        LongitudinalAxis_Width = (Wings_Thorax_Upper_X - Wings_Thorax_Lower_X);
+        LongitudinalAxis_Height = (Wings_Thorax_Upper_Y - Wings_Thorax_Lower_Y);
+        
+        %Calculates the absolute arctan and returns the answer in degrees
+        Axis_Angle = atand(LongitudinalAxis_Width/LongitudinalAxis_Height);
+        
+        
+        %% SlopeWidth and SlopeHeight
+        WBA_SlopeWidth_Right = (Wings_Distal_Right_X - Wings_Hinge_Right_X);
+        WBA_SlopeHeight_Right = (Wings_Distal_Right_Y - Wings_Hinge_Right_Y);
     
+        WBA_SlopeWidth_Left = (Wings_Distal_Left_X - Wings_Hinge_Left_X);
+        WBA_SlopeHeight_Left = (Wings_Distal_Left_Y - Wings_Hinge_Left_Y);
     
-    %% LongitudinalAxis Slope (Theta_Angle)
-    LongitudinalAxis_Width = (Wings_Thorax_Upper_X - Wings_Thorax_Lower_X);
-    LongitudinalAxis_Height = (Wings_Thorax_Upper_Y - Wings_Thorax_Lower_Y);
-    
-    %Calculates the absolute arctan and returns the answer in degrees
-    Axis_Angle = atand(LongitudinalAxis_Width/LongitudinalAxis_Height);
-    
-    
-    %% SlopeWidth and SlopeHeight
-    WBA_SlopeWidth_Right = (Wings_Distal_Right_X - Wings_Hinge_Right_X);
-    WBA_SlopeHeight_Right = (Wings_Distal_Right_Y - Wings_Hinge_Right_Y);
-
-    WBA_SlopeWidth_Left = (Wings_Distal_Left_X - Wings_Hinge_Left_X);
-    WBA_SlopeHeight_Left = (Wings_Distal_Left_Y - Wings_Hinge_Left_Y);
-
-    
-    %% Calculate Wing Beat Amplitudes
-    %calculates the arctan and returns the answer in degrees
-    WBA_Right = atand(WBA_SlopeWidth_Right/WBA_SlopeHeight_Right);
-    if(WBA_SlopeHeight_Right >= 0)
-        WBA_Right = 180 - abs(WBA_Right - Axis_Angle);                   
-    else
-        WBA_Right = abs(WBA_Right - Axis_Angle);
+        
+        %% Calculate Wing Beat Amplitudes
+        %calculates the arctan and returns the answer in degrees
+        WBA_Right = atand(WBA_SlopeWidth_Right/WBA_SlopeHeight_Right);
+        if(WBA_SlopeHeight_Right >= 0)
+            WBA_Right = 180 - abs(WBA_Right - Axis_Angle);                   
+        else
+            WBA_Right = abs(WBA_Right - Axis_Angle);
+        end
+        
+        %calculates the arctan and returns the answer in degrees
+        WBA_Left = atand(WBA_SlopeWidth_Left/WBA_SlopeHeight_Left);
+        if(WBA_SlopeHeight_Left >= 0)
+            WBA_Left = 180 - abs(WBA_Left - Axis_Angle);
+        else
+            WBA_Left = abs(WBA_Left - Axis_Angle);
+        end
+        
+        %% Assemble
+        Wings_Calculations =  [WBA_Right,WBA_Right_Confidence,WBA_Left,WBA_Left_Confidence,Axis_Angle,Axis_Angle_Confidence];
     end
-    
-    %calculates the arctan and returns the answer in degrees
-    WBA_Left = atand(WBA_SlopeWidth_Left/WBA_SlopeHeight_Left);
-    if(WBA_SlopeHeight_Left >= 0)
-        WBA_Left = 180 - abs(WBA_Left - Axis_Angle);
-    else
-        WBA_Left = abs(WBA_Left - Axis_Angle);
-    end
-    
-    %% Assemble
-    Wings_Calculations =  [WBA_Right,WBA_Right_Confidence,WBA_Left,WBA_Left_Confidence,Axis_Angle,Axis_Angle_Confidence];
-    
 end

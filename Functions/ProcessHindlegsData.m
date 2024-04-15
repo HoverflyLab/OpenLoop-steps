@@ -1,10 +1,12 @@
-function [Hindlegs_RawData, Hindlegs_Calculations] = ProcessHindlegsData(TempHindlegsCSV, Row , FrameHeight, Axis_Angle)
+function [Hindlegs_RawData, Hindlegs_Calculations, Axis_Angle] = ProcessHindlegsData(TempHindlegsCSV, Row , FrameHeight, Axis_Angle, calculations)
 %PROCESSHINDLEGSDATA Proximal-Knee Angle and Distance, Knee-Distal Angle and Distance, Area, + confidence for each, Right and Left
 
     %% IMPORTANT - DLC Y values are inverted so we need to take the Y
     %value given from the resolution of the frame, this allows us to work with Y values that
     %match standard graphing conventions. e.g. X value increases left to right, Y value increases bottom to top.
     
+    % Set these to 0 in case calculations aren't required by user
+    Hindlegs_Calculations = 0;
     %% Read in Hindlegs label data
     Hindlegs_Proximal_Right_X = TempHindlegsCSV(Row,2);
     Hindlegs_Proximal_Right_Y = FrameHeight - TempHindlegsCSV(Row,3);
@@ -54,97 +56,98 @@ function [Hindlegs_RawData, Hindlegs_Calculations] = ProcessHindlegsData(TempHin
     %Calculate the angle from the Knee to the Distal point.
     %Calculate the distance from the Knee to the Distal point.
     
-    %% Calculate the angle of the leg from the Proximal point to the Knee.
-    ProximalKnee_Width_Right = Hindlegs_Knee_Right_X - Hindlegs_Proximal_Right_X;
-    ProximalKnee_Height_Right = Hindlegs_Knee_Right_Y - Hindlegs_Proximal_Right_Y;
-    %calculates the arctan and returns the answer in degrees
-    ProximalKnee_Angle_Right = atand(ProximalKnee_Width_Right/ProximalKnee_Height_Right);
-    if(ProximalKnee_Height_Right >= 0)
-        ProximalKnee_Angle_Right = 180 - abs(ProximalKnee_Angle_Right - Axis_Angle);                   
-    else
-        ProximalKnee_Angle_Right = abs(ProximalKnee_Angle_Right - Axis_Angle);
-    end
-    
-    %Calculate ProximalKnee_Angle_Confidence
-    ProximalKnee_Angle_Right_Confidence = Hindlegs_Proximal_Right_Confidence * Hindlegs_Knee_Right_Confidence;
-    
-    
-    %Calculate ProximalKnee_Angle
-    ProximalKnee_Width_Left = Hindlegs_Knee_Left_X - Hindlegs_Proximal_Left_X;
-    ProximalKnee_Height_Left = Hindlegs_Knee_Left_Y - Hindlegs_Proximal_Left_Y;
-    %calculates the arctan and returns the answer in degrees
-    ProximalKnee_Angle_Left = atand(ProximalKnee_Width_Left/ProximalKnee_Height_Left);
-    if(ProximalKnee_Height_Left >= 0)
-        ProximalKnee_Angle_Left = 180 - abs(ProximalKnee_Angle_Left - Axis_Angle);                   
-    else
-        ProximalKnee_Angle_Left = abs(ProximalKnee_Angle_Left - Axis_Angle);
-    end
-    
-    %Calculate ProximalKnee_Angle_Confidence
-    ProximalKnee_Angle_Left_Confidence = Hindlegs_Proximal_Left_Confidence * Hindlegs_Knee_Left_Confidence;
-    
-    %% Calculate the distance from the Proximal point to the Knee
-    ProximalKnee_Distance_Right = sqrt((ProximalKnee_Width_Right^2) + (ProximalKnee_Height_Right^2));
-    ProximalKnee_Distance_Right_Confidence = Hindlegs_Proximal_Right_Confidence * Hindlegs_Knee_Right_Confidence;
-    
-    ProximalKnee_Distance_Left = sqrt((ProximalKnee_Width_Left^2) + (ProximalKnee_Height_Left^2));
-    ProximalKnee_Distance_Left_Confidence = Hindlegs_Proximal_Left_Confidence * Hindlegs_Knee_Left_Confidence;
-    
-    
-    %% Calculate the angle from the Knee to the Distal point.
-    KneeDistal_Width_Right = Hindlegs_Distal_Right_X - Hindlegs_Knee_Right_X;
-    KneeDistal_Height_Right = Hindlegs_Distal_Right_Y - Hindlegs_Knee_Right_Y;
-    %calculates the arctan and returns the answer in degrees
-    KneeDistal_Angle_Right = atand(KneeDistal_Width_Right/KneeDistal_Height_Right);
-    if(Axis_Angle >= 0)
-        if(KneeDistal_Angle_Right > Axis_Angle)
-            KneeDistal_Angle_Right = -abs(KneeDistal_Angle_Right - Axis_Angle);
+    if calculations ~= 0
+        %% Calculate the angle of the leg from the Proximal point to the Knee.
+        ProximalKnee_Width_Right = Hindlegs_Knee_Right_X - Hindlegs_Proximal_Right_X;
+        ProximalKnee_Height_Right = Hindlegs_Knee_Right_Y - Hindlegs_Proximal_Right_Y;
+        %calculates the arctan and returns the answer in degrees
+        ProximalKnee_Angle_Right = atand(ProximalKnee_Width_Right/ProximalKnee_Height_Right);
+        if(ProximalKnee_Height_Right >= 0)
+            ProximalKnee_Angle_Right = 180 - abs(ProximalKnee_Angle_Right - Axis_Angle);                   
         else
-            KneeDistal_Angle_Right = abs(KneeDistal_Angle_Right - Axis_Angle);
-        end                        
-    else
-        if(KneeDistal_Angle_Right < Axis_Angle)
-            KneeDistal_Angle_Right = abs(KneeDistal_Angle_Right - Axis_Angle);
-        else
-            KneeDistal_Angle_Right = -abs(KneeDistal_Angle_Right - Axis_Angle);
+            ProximalKnee_Angle_Right = abs(ProximalKnee_Angle_Right - Axis_Angle);
         end
-    end
-    
-    %Calculate KneeDistal_Angle_Confidence
-    KneeDistal_Angle_Right_Confidence = Hindlegs_Knee_Right_Confidence * Hindlegs_Distal_Right_Confidence;
-    
-    
-    %Calculate KneeDistal_Angle
-    KneeDistal_Width_Left = Hindlegs_Distal_Left_X - Hindlegs_Knee_Left_X;
-    KneeDistal_Height_Left = Hindlegs_Distal_Left_Y - Hindlegs_Knee_Left_Y;
-    %calculates the arctan and returns the answer in degrees
-    KneeDistal_Angle_Left = atand(KneeDistal_Width_Left/KneeDistal_Height_Left);
-    if(Axis_Angle >= 0)
-        if(KneeDistal_Angle_Left > Axis_Angle)
-            KneeDistal_Angle_Left = abs(KneeDistal_Angle_Left - Axis_Angle);
+        
+        %Calculate ProximalKnee_Angle_Confidence
+        ProximalKnee_Angle_Right_Confidence = Hindlegs_Proximal_Right_Confidence * Hindlegs_Knee_Right_Confidence;
+        
+        
+        %Calculate ProximalKnee_Angle
+        ProximalKnee_Width_Left = Hindlegs_Knee_Left_X - Hindlegs_Proximal_Left_X;
+        ProximalKnee_Height_Left = Hindlegs_Knee_Left_Y - Hindlegs_Proximal_Left_Y;
+        %calculates the arctan and returns the answer in degrees
+        ProximalKnee_Angle_Left = atand(ProximalKnee_Width_Left/ProximalKnee_Height_Left);
+        if(ProximalKnee_Height_Left >= 0)
+            ProximalKnee_Angle_Left = 180 - abs(ProximalKnee_Angle_Left - Axis_Angle);                   
         else
-            KneeDistal_Angle_Left = -abs(KneeDistal_Angle_Left - Axis_Angle);
+            ProximalKnee_Angle_Left = abs(ProximalKnee_Angle_Left - Axis_Angle);
         end
-    else
-        if(KneeDistal_Angle_Left < Axis_Angle)
-            KneeDistal_Angle_Left = -abs(KneeDistal_Angle_Left - Axis_Angle);
+        
+        %Calculate ProximalKnee_Angle_Confidence
+        ProximalKnee_Angle_Left_Confidence = Hindlegs_Proximal_Left_Confidence * Hindlegs_Knee_Left_Confidence;
+        
+        %% Calculate the distance from the Proximal point to the Knee
+        ProximalKnee_Distance_Right = sqrt((ProximalKnee_Width_Right^2) + (ProximalKnee_Height_Right^2));
+        ProximalKnee_Distance_Right_Confidence = Hindlegs_Proximal_Right_Confidence * Hindlegs_Knee_Right_Confidence;
+        
+        ProximalKnee_Distance_Left = sqrt((ProximalKnee_Width_Left^2) + (ProximalKnee_Height_Left^2));
+        ProximalKnee_Distance_Left_Confidence = Hindlegs_Proximal_Left_Confidence * Hindlegs_Knee_Left_Confidence;
+        
+        
+        %% Calculate the angle from the Knee to the Distal point.
+        KneeDistal_Width_Right = Hindlegs_Distal_Right_X - Hindlegs_Knee_Right_X;
+        KneeDistal_Height_Right = Hindlegs_Distal_Right_Y - Hindlegs_Knee_Right_Y;
+        %calculates the arctan and returns the answer in degrees
+        KneeDistal_Angle_Right = atand(KneeDistal_Width_Right/KneeDistal_Height_Right);
+        if(Axis_Angle >= 0)
+            if(KneeDistal_Angle_Right > Axis_Angle)
+                KneeDistal_Angle_Right = -abs(KneeDistal_Angle_Right - Axis_Angle);
+            else
+                KneeDistal_Angle_Right = abs(KneeDistal_Angle_Right - Axis_Angle);
+            end                        
         else
-            KneeDistal_Angle_Left = abs(KneeDistal_Angle_Left - Axis_Angle);
+            if(KneeDistal_Angle_Right < Axis_Angle)
+                KneeDistal_Angle_Right = abs(KneeDistal_Angle_Right - Axis_Angle);
+            else
+                KneeDistal_Angle_Right = -abs(KneeDistal_Angle_Right - Axis_Angle);
+            end
         end
+        
+        %Calculate KneeDistal_Angle_Confidence
+        KneeDistal_Angle_Right_Confidence = Hindlegs_Knee_Right_Confidence * Hindlegs_Distal_Right_Confidence;
+        
+        
+        %Calculate KneeDistal_Angle
+        KneeDistal_Width_Left = Hindlegs_Distal_Left_X - Hindlegs_Knee_Left_X;
+        KneeDistal_Height_Left = Hindlegs_Distal_Left_Y - Hindlegs_Knee_Left_Y;
+        %calculates the arctan and returns the answer in degrees
+        KneeDistal_Angle_Left = atand(KneeDistal_Width_Left/KneeDistal_Height_Left);
+        if(Axis_Angle >= 0)
+            if(KneeDistal_Angle_Left > Axis_Angle)
+                KneeDistal_Angle_Left = abs(KneeDistal_Angle_Left - Axis_Angle);
+            else
+                KneeDistal_Angle_Left = -abs(KneeDistal_Angle_Left - Axis_Angle);
+            end
+        else
+            if(KneeDistal_Angle_Left < Axis_Angle)
+                KneeDistal_Angle_Left = -abs(KneeDistal_Angle_Left - Axis_Angle);
+            else
+                KneeDistal_Angle_Left = abs(KneeDistal_Angle_Left - Axis_Angle);
+            end
+        end
+        
+        %Calculate KneeDistal_Angle_Confidence
+        KneeDistal_Angle_Left_Confidence = Hindlegs_Knee_Left_Confidence * Hindlegs_Distal_Left_Confidence;
+        
+        %% Calculate the distance from the Knee to the Distal point
+        KneeDistal_Distance_Right = sqrt((KneeDistal_Width_Right^2) + (KneeDistal_Height_Right^2));
+        KneeDistal_Distance_Right_Confidence = Hindlegs_Knee_Right_Confidence * Hindlegs_Distal_Right_Confidence;
+        
+        KneeDistal_Distance_Left = sqrt((KneeDistal_Width_Left^2) + (KneeDistal_Height_Left^2));
+        KneeDistal_Distance_Left_Confidence = Hindlegs_Knee_Left_Confidence * Hindlegs_Distal_Left_Confidence;
+        
+        %% Assemble
+        Hindlegs_Calculations = [ProximalKnee_Angle_Right, ProximalKnee_Angle_Right_Confidence, ProximalKnee_Angle_Left, ProximalKnee_Angle_Left_Confidence, ProximalKnee_Distance_Right, ProximalKnee_Distance_Right_Confidence, ProximalKnee_Distance_Left, ProximalKnee_Distance_Left_Confidence, KneeDistal_Angle_Right, KneeDistal_Angle_Right_Confidence, KneeDistal_Angle_Left, KneeDistal_Angle_Left_Confidence, KneeDistal_Distance_Right, KneeDistal_Distance_Right_Confidence, KneeDistal_Distance_Left, KneeDistal_Distance_Left_Confidence];
     end
-    
-    %Calculate KneeDistal_Angle_Confidence
-    KneeDistal_Angle_Left_Confidence = Hindlegs_Knee_Left_Confidence * Hindlegs_Distal_Left_Confidence;
-    
-    %% Calculate the distance from the Knee to the Distal point
-    KneeDistal_Distance_Right = sqrt((KneeDistal_Width_Right^2) + (KneeDistal_Height_Right^2));
-    KneeDistal_Distance_Right_Confidence = Hindlegs_Knee_Right_Confidence * Hindlegs_Distal_Right_Confidence;
-    
-    KneeDistal_Distance_Left = sqrt((KneeDistal_Width_Left^2) + (KneeDistal_Height_Left^2));
-    KneeDistal_Distance_Left_Confidence = Hindlegs_Knee_Left_Confidence * Hindlegs_Distal_Left_Confidence;
-    
-    %% Assemble
-    Hindlegs_Calculations = [ProximalKnee_Angle_Right, ProximalKnee_Angle_Right_Confidence, ProximalKnee_Angle_Left, ProximalKnee_Angle_Left_Confidence, ProximalKnee_Distance_Right, ProximalKnee_Distance_Right_Confidence, ProximalKnee_Distance_Left, ProximalKnee_Distance_Left_Confidence, KneeDistal_Angle_Right, KneeDistal_Angle_Right_Confidence, KneeDistal_Angle_Left, KneeDistal_Angle_Left_Confidence, KneeDistal_Distance_Right, KneeDistal_Distance_Right_Confidence, KneeDistal_Distance_Left, KneeDistal_Distance_Left_Confidence];
-    
 end
 

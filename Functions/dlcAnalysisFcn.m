@@ -199,7 +199,7 @@ filePath = append(pathName, fileName);
 
 % Save required variables for OLStep 3
 save(filePath, "videoList", "modelList", "modelListSize", ...
-    "totalNumberOfCalculations", "totalNumberOfRawDataPoints")
+    "totalNumberOfCalculations", "totalNumberOfRawDataPoints", "inputFolderPath")
 
 videoPath = filePath;
 fprintf('Analysis complete, file required for OLStep3 saved as %s\n', filePath);

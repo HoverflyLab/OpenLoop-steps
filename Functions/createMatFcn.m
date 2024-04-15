@@ -26,9 +26,10 @@ disp('We will now begin creating the VideoName_DLC_Analysis.mat file')
 % NEEDS TO BE ACCURATE
 VideoResolution = [320,240];        % Used to invert Y values by using the frame height
 videoType = '.mp4';                 % Used to identify video files
+VideosAnalysed = 0;                 % Counter used to display progress to user
 
 load(filePath, "videoList", "modelList", "modelListSize", ...
-    "totalNumberOfCalculations", "totalNumberOfRawDataPoints")
+    "totalNumberOfCalculations", "totalNumberOfRawDataPoints", "inputFolderPath")
 
 % Search each folder and locate all valid .csv files.
 % For each valid video provided
@@ -75,15 +76,15 @@ for i = 1:size(videoList)
         return
     end
 
+    for model = 1:modelListSize
+        eval("Temp" + modelList(model).name + "CSV = csvread(TempCSVFiles(" + model + ").filepath,3,0);");
+    end
+
     % Initialise entire data set with arbitrary values, stops the script from continuously allocating memory later on.
     % All csv files should be the same size
     [Totalframes,~] = size(TempWingsCSV);
     DLC_RawData(Totalframes,1:totalNumberOfRawDataPoints) = zeros(1,totalNumberOfRawDataPoints); %#ok<AGROW>
     DLC_Calculations(Totalframes,1:totalNumberOfCalculations) = zeros(1,totalNumberOfCalculations); %#ok<AGROW>
-
-    for model = 1:modelListSize
-        eval("Temp" + modelList(model).name + "CSV = csvread(TempCSVFiles(1).filepath,3,0)");
-    end
 
     % For each row in the CSV files we run the following calculations
     for Row = 1:Totalframes
@@ -91,11 +92,11 @@ for i = 1:size(videoList)
         RawData = [];
         Calculations = [];
         Axis_Angle = 0; %#ok<NASGU>
-        for model = modelListSize
-            key = TempmodelList(model).name;
+        for model = 1:modelListSize
+            key = modelList(model).name;
             noCalcs = modelList(model).calculations; %#ok<NASGU>
             [Model_RawData, Model_Calculations, Axis_Angle] = ... 
-                eval("Process" + key + "Data(Temp" + key + "CSV, Row, VideoResolution(1,2), Axis_Angle, noCalcs)"); %#ok<ASGLU>
+                eval("Process" + key + "Data(Temp" + key + "CSV, Row, VideoResolution(1,2), Axis_Angle, noCalcs);"); %#ok<ASGLU>
             % Append the different RawData and Calculations together, while maintaining the expected order.
             RawData = [RawData, Model_RawData];
             if Model_Calculations ~= 0
@@ -104,7 +105,7 @@ for i = 1:size(videoList)
         end
         
         
-        actualDataSize = size (RawData, 1);
+        actualDataSize = size (RawData, 2);
         % Override current row with the processed data output.
         DLC_RawData(Row,1:actualDataSize) = RawData;
         DLC_Calculations(Row,1:totalNumberOfCalculations) = Calculations;

@@ -18,7 +18,7 @@
 % Note: Confidence values for calculations are obtained by multiplying the relevant confidence values together.
 % ticktime_blocks are equal to the trial start time since epoch 
 
-function createMatFcn(filePath)
+function runCalculationsAndPackage(filePath)
 
 % Let the user know what is going on
 disp('We will now begin creating the VideoName_DLC_Analysis.mat file')

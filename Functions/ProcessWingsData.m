@@ -56,7 +56,7 @@ function [Wings_RawData, Wings_Calculations, Axis_Angle] = ProcessWingsData(Temp
         %% LongitudinalAxis Slope (Theta_Angle)
         LongitudinalAxis_Width = (Wings_Thorax_Upper_X - Wings_Thorax_Lower_X);
         LongitudinalAxis_Height = (Wings_Thorax_Upper_Y - Wings_Thorax_Lower_Y);
-        
+
         %Calculates the absolute arctan and returns the answer in degrees
         Axis_Angle = atand(LongitudinalAxis_Width/LongitudinalAxis_Height);
         

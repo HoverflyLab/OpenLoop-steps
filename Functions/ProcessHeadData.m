@@ -48,13 +48,20 @@ function [Head_RawData, Head_Calculations, Axis_Angle] = ProcessHeadData(TempHea
         ConfidenceArray = [Head_Midline_Anterior_1_Confidence,Head_Midline_2_Confidence,Head_Midline_3_Confidence,Head_Midline_4_Confidence,Head_Midline_5_Confidence,Head_Midline_Posterior_6_Confidence];
         Head_Slope_Confidence = prod(ConfidenceArray); % prod returns the multiple of all elements
         
-        SumOfAllX = Head_Midline_Anterior_1_X + Head_Midline_2_X + Head_Midline_3_X + Head_Midline_4_X + Head_Midline_5_X + Head_Midline_Posterior_6_X;
-        SumOfAllY = Head_Midline_Anterior_1_Y + Head_Midline_2_Y + Head_Midline_3_Y + Head_Midline_4_Y + Head_Midline_5_Y + Head_Midline_Posterior_6_Y;
+        Head_X_Points = [Head_Midline_Anterior_1_X  Head_Midline_2_X Head_Midline_3_X ...
+            Head_Midline_4_X Head_Midline_5_X Head_Midline_Posterior_6_X];
+        Head_Y_Points = [Head_Midline_Anterior_1_Y  Head_Midline_2_Y Head_Midline_3_Y ...
+            Head_Midline_4_Y Head_Midline_5_Y Head_Midline_Posterior_6_Y];
         
-        Head_Slope = (atand(SumOfAllX / SumOfAllY)) - Axis_Angle;
+        p = polyfit(Head_X_Points,Head_Y_Points,1);
+        
+        head_slope = 1/p(1);
+        head_angle_rad = atan(head_slope);
+        head_angle_deg = atand(head_slope);
+        Relative_Head_Angle = head_angle_deg - Axis_Angle;
         
         %% Assemble
-        Head_Calculations = [Head_Slope, Head_Slope_Confidence];
+        Head_Calculations = [Relative_Head_Angle, Head_Slope_Confidence];
     end
 end
 

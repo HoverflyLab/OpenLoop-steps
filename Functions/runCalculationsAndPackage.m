@@ -108,7 +108,7 @@ for i = 1:size(videoList)
         actualDataSize = size (RawData, 2);
         % Override current row with the processed data output.
         DLC_RawData(Row,1:actualDataSize) = RawData;
-        DLC_Calculations(Row,1:totalNumberOfCalculations) = Calculations;
+        DLC_Calculations(Row,1:length(Calculations)) = Calculations;
 
     end
     

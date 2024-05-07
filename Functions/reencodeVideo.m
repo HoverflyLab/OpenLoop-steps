@@ -1,6 +1,6 @@
 % Written by Raymond Aoukar and Chris Johnston - last updated 2023-04-11
 % This script is used to re-encode the video files produced by Guvcview to work properly with Deeplabcut 
-function reencodeFcn(inputFolderPath, outputFolderPath)
+function reencodeVideo(inputFolderPath, outputFolderPath)
 
 % Check to make sure both file paths are valid before continuing
 if(length(inputFolderPath) <= 1 || length(outputFolderPath) <= 1)

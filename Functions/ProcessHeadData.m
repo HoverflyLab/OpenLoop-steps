@@ -59,6 +59,16 @@ function [Head_RawData, Head_Calculations, Axis_Angle] = ProcessHeadData(TempHea
         head_angle_rad = atan(head_slope);
         head_angle_deg = atand(head_slope);
         Relative_Head_Angle = head_angle_deg - Axis_Angle;
+
+        thorax_slope = tan(Axis_Angle);
+        % Reject head angles done poorly by polyfit
+        head_fit = thorax_slope(1) * Head_X_Points;
+        corr_fit_temp = corrcoef(head_fit, Head_Y_Points);
+        corr_fit = corr_fit_temp(2);
+           
+        if abs(corr_fit(l,:)) < 0.1
+            Relative_Head_Angle = NaN;
+        end
         
         %% Assemble
         Head_Calculations = [Relative_Head_Angle, Head_Slope_Confidence];

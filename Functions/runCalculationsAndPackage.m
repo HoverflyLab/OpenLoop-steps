@@ -33,7 +33,12 @@ load(filePath, "videoList", "modelList", "modelListSize", ...
 
 % Search each folder and locate all valid .csv files.
 % For each valid video provided
-for i = 1:size(videoList)
+for i = 1:size(videoList, 1)
+
+    % Print a status message so the user knows what's going on internally
+    message = sprintf('Analysing video %d out of %d\n',i, size(videoList, 1));
+    disp(message);
+
     
     % Find all files within the folder
     TempFileList = dir(fullfile(videoList(i).folderpath));
@@ -142,11 +147,11 @@ for i = 1:size(videoList)
     m = regexp(TempFileName, patterns,'names');
 
     if length(m.month) > 2
-        m.month = convertMonth(m.month);
+        monthNumber = convertMonth(m.month);
     end
 
     % Depending on the match, convert into epoch (posix) time
-    t1 = datetime(str2double(m.year), m.month, str2double(m.day), str2double(m.hours)...
+    t1 = datetime(str2double(m.year), monthNumber, str2double(m.day), str2double(m.hours)...
         , str2double(m.minutes), str2double(m.seconds));
     ticktime = posixtime(t1); %#ok<NASGU> Used in below eval
     
@@ -156,8 +161,14 @@ for i = 1:size(videoList)
     clear DLC_RawData; %Reset so that existing rows aren't just overridden but the entire structure is replaced.
     VideosAnalysed = VideosAnalysed + 1;
     %Search next folder in the list 
+    
+    % Clear analysis video message for a clean command window 
+    for character = 1 : length(message) + 1
+        fprintf('\b')
+    end
 end
 
+FileDate = strcat(m.day,'-', m.month,'-', m.year,'_', m.hours, m.minutes, m.seconds);
 fprintf('%i videos were analysed, attempting to save .mat file\n',VideosAnalysed);
 DLC_Data_Location = strcat(inputFolderPath,'/',FileDate,'_DLCAnalysis.mat');
 save(DLC_Data_Location,'data_block*','unit_block*','ticktimes_block*');

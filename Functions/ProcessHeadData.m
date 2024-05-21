@@ -56,7 +56,6 @@ function [Head_RawData, Head_Calculations, Axis_Angle] = ProcessHeadData(TempHea
         p = polyfit(Head_X_Points,Head_Y_Points,1);
         
         head_slope = p(1);
-        head_angle_rad = atan(head_slope);
         head_angle_deg = atand(head_slope);
         Relative_Head_Angle = head_angle_deg - Axis_Angle;
 
@@ -65,7 +64,7 @@ function [Head_RawData, Head_Calculations, Axis_Angle] = ProcessHeadData(TempHea
         corr_fit_temp = corrcoef(head_fit, Head_Y_Points);
         corr_fit = corr_fit_temp(2);
            
-        if abs(corr_fit(l,:)) < 0.1
+        if abs(corr_fit) < 0.1
             Relative_Head_Angle = NaN;
         end
         

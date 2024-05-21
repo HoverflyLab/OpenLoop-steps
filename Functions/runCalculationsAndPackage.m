@@ -123,34 +123,32 @@ for i = 1:size(videoList)
     % Get the date and time specified in the video name
     % and convert it to epoch time, save the result as ticktimes_block.
 
-    % When analyzing closedloop Expects TempFileName to have the format 
-    % WingsControl_Latency_240_10_20230615_104139.640942_20230615_104314.966523_1_VIDEO
-    % Or User_Specified_Name_240_10_20230615_104139.640942_20230615_104314.966523_1_VIDEO
-    % This is why we use (tempsize-7) e.g. count from the back as that
-    % part of the filename is more stable and less likely to change.
-    % When analyzing openloop file names of RE-Video_15-Jun-2023 16_17_25.mp4 are expected.
-
-    % Tempsize is the number of strings in the name seperated by '_' '.' and ' '
+    % We use a function called 'regexp' to detect patterns in the filename
+    % to find dates. Values found in expected formats will be assigned into
+    % variables, so the filename can be anything as long as it has a valid
+    % datetime format.
 
     format longG;
     FileDate = strsplit(TempFileName,{'_','.',' '});
-    Tempsize = size(FileDate);
-    Tempsize = Tempsize(1,2);
     
-    %Work out which video type (TimeMatched, ClosedLoop, OpenLoop) Error prone and needs work.
-    if not(isempty(strfind(TempFileList(j).name,'TM_')))
-        dateformat = 'yyyyMMdd_HHmmss';
-        FileDate = sprintf('%s_%s',FileDate{2},FileDate{3});
-    elseif (Tempsize > 8)
-        dateformat = 'yyyyMMdd_HHmmss.SSSSSS';
-        FileDate = sprintf('%s_%s.%s',FileDate{Tempsize-6},FileDate{Tempsize-5},FileDate{Tempsize-4});
-    else
-        dateformat = 'dd-MMM-yyyy_HHmmss';
-        FileDate = sprintf('%s_%s%s%s',FileDate{Tempsize-3},FileDate{Tempsize-2},FileDate{Tempsize-1},FileDate{Tempsize});
+    % Write down expected datetime formats
+    patterns = [ ...
+        '(?<year>\d{4})(?<month>\d{2})(?<day>\d{2})_(?<hours>\d{2})(?<minutes>\d{2})(?<seconds>\d{2})|'   ... % yyyyMMdd_HHmmss
+        '(?<day>\d{2})-(?<month>\w+)-(?<year>\d{4}) (?<hours>\d{2})_(?<minutes>\d{2})_(?<seconds>\d{2})|' ... % dd-MMM-yyyy HH_mm_ss
+        '(?<day>\d{2})-(?<month>\w+)-(?<year>\d{4})_(?<hours>\d{2})(?<minutes>\d{2})(?<seconds>\d{2})'        % dd-MMM-yyyy_HHmmss
+    ];
+
+    % Compare against the name of the file
+    m = regexp(TempFileName, patterns,'names');
+
+    if length(m.month) > 2
+        m.month = convertMonth(m.month);
     end
 
-    t1 = datetime(FileDate,'InputFormat',dateformat);
-    ticktime = posixtime(t1);
+    % Depending on the match, convert into epoch (posix) time
+    t1 = datetime(str2double(m.year), m.month, str2double(m.day), str2double(m.hours)...
+        , str2double(m.minutes), str2double(m.seconds));
+    ticktime = posixtime(t1); %#ok<NASGU> Used in below eval
     
     eval(sprintf('ticktimes_block%i = ticktime;',i));
     
@@ -164,3 +162,37 @@ fprintf('%i videos were analysed, attempting to save .mat file\n',VideosAnalysed
 DLC_Data_Location = strcat(inputFolderPath,'/',FileDate,'_DLCAnalysis.mat');
 save(DLC_Data_Location,'data_block*','unit_block*','ticktimes_block*');
 disp('.mat file saved');
+
+
+function month = convertMonth(month)
+month = lower(month);
+switch month
+    case {'january', 'jan'}
+        month = 1;
+    case {'february', 'feb'}
+        month = 2;
+    case {'march', 'mar'}
+        month = 3;
+    case {'april', 'apr'}
+        month = 4;
+    case 'may'
+        month = 5;
+    case {'june', 'jun'}
+        month = 6;
+    case {'july', 'jul'}
+        month = 7;
+    case {'august', 'aug'}
+        month = 8;
+    case {'september', 'sep'}
+        month = 9;
+    case {'october', 'oct'}
+        month = 10;
+    case {'november', 'nov'}
+        month = 11;
+    case {'december', 'dec'}
+        month = 12;
+end
+
+
+
+

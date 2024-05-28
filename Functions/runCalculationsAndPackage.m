@@ -72,6 +72,10 @@ for video = 1:size(videoList, 1)
     
     % Get size of CSVList (we are only interested in Y value)
     [~,CSVListSize] = size(TempCSVFiles);
+
+    % Clear and reset data and calculation vars (used in packaging data)
+    dataHeaders = [];
+    calcHeaders = [];
     
     % Before we begin analysis
     % Check if we have the correct amount of CSV files (there should be one file for each model).
@@ -87,9 +91,11 @@ for video = 1:size(videoList, 1)
 
     % Initialise entire data set with arbitrary values, stops the script from continuously allocating memory later on.
     % All csv files should be the same size
+    % We add one to the total frames here to account for adding in titles
+    % for individual data.
     [Totalframes,~] = size(TempWingsCSV);
-    DLC_RawData(Totalframes,1:totalNumberOfRawDataPoints) = zeros(1,totalNumberOfRawDataPoints); %#ok<AGROW>
-    DLC_Calculations(Totalframes,1:totalNumberOfCalculations) = zeros(1,totalNumberOfCalculations); %#ok<AGROW>
+    DLC_RawData(Totalframes + 1,1:totalNumberOfRawDataPoints) = zeros(1,totalNumberOfRawDataPoints); %#ok<AGROW>
+    DLC_Calculations(Totalframes + 1,1:totalNumberOfCalculations) = zeros(1,totalNumberOfCalculations); %#ok<AGROW>
 
     % For each row in the CSV files we run the following calculations
     for frame = 1:Totalframes
@@ -107,16 +113,24 @@ for video = 1:size(videoList, 1)
             if Model_Calculations ~= 0
                 Calculations = [Calculations, Model_Calculations];
             end
+            % Append collumn names in order of appearance
+            % Supressed warning of vars not pre-allocating space as it is
+            % unknown until the end of looping through the processing
+            % scripts.
+            if frame == 1
+                dataHeaders = [dataHeaders, Column_Names.raw]; %#ok<AGROW>
+                calcHeaders = [calcHeaders, Column_Names.calculated]; %#ok<AGROW>
+            end
 
         end
 
+        actualDataSize = size (RawData, 2);
         % Package the names of all columns into the first row
         if frame == 1
-
+            DLC_RawData(1, 1:actualDataSize) = dataHeaders;
+            DLC_Calculations(1, 1:length(Calculations)) = calcHeaders;
         end
-        
-        
-        actualDataSize = size (RawData, 2);
+
         % Override current row with the processed data output.
         DLC_RawData(frame + 1,1:actualDataSize) = RawData;
         DLC_Calculations(frame + 1,1:length(Calculations)) = Calculations;

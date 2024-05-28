@@ -81,7 +81,7 @@ function [Head_RawData, Head_Calculations, Axis_Angle, Column_Names] = ProcessHe
         Head_Calculations = [Relative_Head_Angle, Head_Slope_Confidence];
 
         % Assemble string array of all calculation names
-        Column_Names.raw  = ["Relative_Head_Angle", "Head_Slope_Confidence"];
+        Column_Names.calculated  = ["Relative_Head_Angle", "Head_Slope_Confidence"];
     end
 end
 

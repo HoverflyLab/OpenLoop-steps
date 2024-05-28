@@ -1,4 +1,4 @@
-function [Head_RawData, Head_Calculations, Axis_Angle] = ProcessHeadData(TempHeadCSV, Row , FrameHeight, Axis_Angle, calculations)
+function [Head_RawData, Head_Calculations, Axis_Angle, Column_Names] = ProcessHeadData(TempHeadCSV, Row , FrameHeight, Axis_Angle, calculations)
 %PROCESSHEADDATA Calculates the line of best fit for the Head
 
     %% IMPORTANT - DLC Y values are inverted so we need to take the Y
@@ -7,6 +7,7 @@ function [Head_RawData, Head_Calculations, Axis_Angle] = ProcessHeadData(TempHea
     
     % Set these to 0 in case calculations aren't required by user
     Head_Calculations = 0;
+    Column_Names.calculated = "No calculations made for head data";
 
     %% Read in Head label data
     Head_Midline_Anterior_1_X = TempHeadCSV(Row,2);
@@ -33,13 +34,21 @@ function [Head_RawData, Head_Calculations, Axis_Angle] = ProcessHeadData(TempHea
     Head_Midline_Posterior_6_Y = FrameHeight - TempHeadCSV(Row,18);
     Head_Midline_Posterior_6_Confidence = TempHeadCSV(Row,19);
     
-    %% Populate RawData by continually appending the data provided by each label. 
-    Head_RawData = [Head_Midline_Anterior_1_X, Head_Midline_Anterior_1_Y, Head_Midline_Anterior_1_Confidence];
-    Head_RawData = [Head_RawData, Head_Midline_2_X, Head_Midline_2_Y, Head_Midline_2_Confidence];
-    Head_RawData = [Head_RawData, Head_Midline_3_X, Head_Midline_3_Y, Head_Midline_3_Confidence];
-    Head_RawData = [Head_RawData, Head_Midline_4_X, Head_Midline_4_Y, Head_Midline_4_Confidence];
-    Head_RawData = [Head_RawData, Head_Midline_5_X, Head_Midline_5_Y, Head_Midline_5_Confidence];
-    Head_RawData = [Head_RawData, Head_Midline_Posterior_6_X, Head_Midline_Posterior_6_Y, Head_Midline_Posterior_6_Confidence];
+    % Populate RawData into an array with the data provided by each label.
+    Head_RawData     = [Head_Midline_Anterior_1_X , Head_Midline_Anterior_1_Y , Head_Midline_Anterior_1_Confidence, ...
+                        Head_Midline_2_X          , Head_Midline_2_Y          , Head_Midline_2_Confidence         , ...
+                        Head_Midline_3_X          , Head_Midline_3_Y          , Head_Midline_3_Confidence         , ...
+                        Head_Midline_4_X          , Head_Midline_4_Y          , Head_Midline_4_Confidence         , ...
+                        Head_Midline_5_X          , Head_Midline_5_Y          , Head_Midline_5_Confidence         , ...
+                        Head_Midline_Posterior_6_X, Head_Midline_Posterior_6_Y, Head_Midline_Posterior_6_Confidence];
+
+    % Populate the column names for data readability
+    Column_Names.raw = ["Head_Midline_Anterior_1_X" , "Head_Midline_Anterior_1_Y" , "Head_Midline_Anterior_1_Confidence", ...
+                        "Head_Midline_2_X"          , "Head_Midline_2_Y"          , "Head_Midline_2_Confidence"         , ...
+                        "Head_Midline_3_X"          , "Head_Midline_3_Y"          , "Head_Midline_3_Confidence"         , ...
+                        "Head_Midline_4_X"          , "Head_Midline_4_Y"          , "Head_Midline_4_Confidence"         , ...
+                        "Head_Midline_5_X"          , "Head_Midline_5_Y"          , "Head_Midline_5_Confidence"         , ...
+                        "Head_Midline_Posterior_6_X", "Head_Midline_Posterior_6_Y", "Head_Midline_Posterior_6_Confidence"];
     
     if calculations ~= 0
         %% HEAD LINE OF BEST FIT CALCULATIONS
@@ -68,8 +77,11 @@ function [Head_RawData, Head_Calculations, Axis_Angle] = ProcessHeadData(TempHea
             Relative_Head_Angle = NaN;
         end
         
-        %% Assemble
+        % Assemble Calculations into an array
         Head_Calculations = [Relative_Head_Angle, Head_Slope_Confidence];
+
+        % Assemble string array of all calculation names
+        Column_Names.raw  = ["Relative_Head_Angle", "Head_Slope_Confidence"];
     end
 end
 

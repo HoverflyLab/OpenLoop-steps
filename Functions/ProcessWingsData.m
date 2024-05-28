@@ -1,7 +1,10 @@
-function [Wings_RawData, Wings_Calculations, Axis_Angle] = ProcessWingsData(TempWingsCSV, Row, FrameHeight, ~, calculations)
+function [Wings_RawData, Wings_Calculations, Axis_Angle, Column_Names] = ProcessWingsData(TempWingsCSV, Row, FrameHeight, ~, calculations)
 %PROCESSWINGDATA Calculates Right and Left Wing Beat Amplitude
     % Set these to 0 in case calculations aren't required by user
     Wings_Calculations = '0';
+    Column_Names.calculated = "No calculations made for wings data";
+
+    % Typically calculated in this script, but won't be if user requests not to
     Axis_Angle = '0';
     %% IMPORTANT - DLC Y values are inverted so we need to take the Y
     %value given from the resolution of the frame, this allows us to work with Y values that
@@ -32,13 +35,21 @@ function [Wings_RawData, Wings_Calculations, Axis_Angle] = ProcessWingsData(Temp
     Wings_Thorax_Lower_Y = FrameHeight - TempWingsCSV(Row,18);
     Wings_Thorax_Lower_Confidence = TempWingsCSV(Row,19);    
 
-    %% Populate RawData by continually appending the data provided by each label. 
-    Wings_RawData = [Wings_Hinge_Right_X, Wings_Hinge_Right_Y, Wings_Hinge_Right_Confidence];
-    Wings_RawData = [Wings_RawData, Wings_Distal_Right_X, Wings_Distal_Right_Y, Wings_Distal_Right_Confidence];
-    Wings_RawData = [Wings_RawData, Wings_Hinge_Left_X, Wings_Hinge_Left_Y, Wings_Hinge_Left_Confidence];
-    Wings_RawData = [Wings_RawData, Wings_Distal_Left_X, Wings_Distal_Left_Y, Wings_Distal_Left_Confidence];
-    Wings_RawData = [Wings_RawData, Wings_Thorax_Upper_X, Wings_Thorax_Upper_Y, Wings_Thorax_Upper_Confidence];
-    Wings_RawData = [Wings_RawData, Wings_Thorax_Lower_X, Wings_Thorax_Lower_Y, Wings_Thorax_Lower_Confidence];
+    % Populate RawData into an array with the data provided by each label.
+    Wings_RawData = [Wings_Hinge_Right_X, Wings_Hinge_Right_Y, Wings_Hinge_Right_Confidence, ...
+                     Wings_Distal_Right_X, Wings_Distal_Right_Y, Wings_Distal_Right_Confidence, ...
+                     Wings_Hinge_Left_X, Wings_Hinge_Left_Y, Wings_Hinge_Left_Confidence, ...
+                     Wings_Distal_Left_X, Wings_Distal_Left_Y, Wings_Distal_Left_Confidence, ...
+                     Wings_Thorax_Upper_X, Wings_Thorax_Upper_Y, Wings_Thorax_Upper_Confidence, ...
+                     Wings_Thorax_Lower_X, Wings_Thorax_Lower_Y, Wings_Thorax_Lower_Confidence];
+
+    % Populate the column names for data readability
+    Column_Names.raw = ["Wings_Hinge_Right_X" , "Wings_Hinge_Right_Y" , "Wings_Hinge_Right_Confidence" , ...
+                        "Wings_Distal_Right_X", "Wings_Distal_Right_Y", "Wings_Distal_Right_Confidence", ...
+                        "Wings_Hinge_Left_X"  , "Wings_Hinge_Left_Y"  , "Wings_Hinge_Left_Confidence"  , ...
+                        "Wings_Distal_Left_X" , "Wings_Distal_Left_Y" , "Wings_Distal_Left_Confidence" , ...
+                        "Wings_Thorax_Upper_X", "Wings_Thorax_Upper_Y", "Wings_Thorax_Upper_Confidence", ...
+                        "Wings_Thorax_Lower_X", "Wings_Thorax_Lower_Y", "Wings_Thorax_Lower_Confidence"];
     
     %% WING BEAT AMPLITUDE CALCULATIONS
     %Calculate confidence values (by multiplying confidence of each point together).
@@ -86,7 +97,13 @@ function [Wings_RawData, Wings_Calculations, Axis_Angle] = ProcessWingsData(Temp
             WBA_Left = abs(WBA_Left - Axis_Angle);
         end
         
-        %% Assemble
-        Wings_Calculations =  [WBA_Right,WBA_Right_Confidence,WBA_Left,WBA_Left_Confidence,Axis_Angle,Axis_Angle_Confidence];
+        % Assemble Calculations into an array
+        Wings_Calculations      = [WBA_Right , WBA_Right_Confidence, ...
+                                   WBA_Left  , WBA_Left_Confidence , ...
+                                   Axis_Angle, Axis_Angle_Confidence];
+        % Assemble string array of all calculation names
+        Column_Names.calculated = ["WBA_Right" , "WBA_Right_Confidence", ...
+                                   "WBA_Left"  , "WBA_Left_Confidence" , ...
+                                   "Axis_Angle", "Axis_Angle_Confidence"];
     end
 end

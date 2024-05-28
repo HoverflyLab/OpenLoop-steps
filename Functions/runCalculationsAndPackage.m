@@ -24,7 +24,7 @@ function runCalculationsAndPackage(filePath)
 disp('We will now begin creating the VideoName_DLC_Analysis.mat file')
 
 % NEEDS TO BE ACCURATE
-VideoResolution = [320,240];        % Used to invert Y values by using the frame height
+VideoResolution = [320,240];        %#ok<NASGU> % Used to invert Y values by using the frame height, error supressed as value is used in an 'eval' statement later
 videoType = '.mp4';                 % Used to identify video files
 VideosAnalysed = 0;                 % Counter used to display progress to user
 
@@ -33,19 +33,19 @@ load(filePath, "videoList", "modelList", "modelListSize", ...
 
 % Search each folder and locate all valid .csv files.
 % For each valid video provided
-for i = 1:size(videoList, 1)
+for video = 1:size(videoList, 1)
 
     % Print a status message so the user knows what's going on internally
-    message = sprintf('Analysing video %d out of %d\n',i, size(videoList, 1));
+    message = sprintf('Analysing video %d out of %d\n',video, size(videoList, 1));
     disp(message);
 
     
     % Find all files within the folder
-    TempFileList = dir(fullfile(videoList(i).folderpath));
+    TempFileList = dir(fullfile(videoList(video).folderpath));
     TempCSVFiles = [];
     
     % Seperate the name of the file from its file extension e.g. .mp4
-    TempFileName = strsplit(videoList(i).name,videoType);
+    TempFileName = strsplit(videoList(video).name,videoType);
     TempFileName = TempFileName{1};
     
     % Search through each file in the directory and find the csv files
@@ -63,7 +63,7 @@ for i = 1:size(videoList, 1)
                     % If the csv contains the keyword e.g. Wings, Head, Hindlegs, Frontlegs.
                     if not(isempty(strfind(TempFileList(j).name,modelList(k).keyword)))
                         TempCSVFiles(k).keyword = modelList(k).keyword;
-                        TempCSVFiles(k).filepath = strcat(videoList(i).folderpath,'/',TempFileList(j).name);   
+                        TempCSVFiles(k).filepath = strcat(videoList(video).folderpath,'/',TempFileList(j).name);
                     end
                 end
             end
@@ -92,7 +92,7 @@ for i = 1:size(videoList, 1)
     DLC_Calculations(Totalframes,1:totalNumberOfCalculations) = zeros(1,totalNumberOfCalculations); %#ok<AGROW>
 
     % For each row in the CSV files we run the following calculations
-    for Row = 1:Totalframes
+    for frame = 1:Totalframes
         % Process each CSV file using the relevant calculations
         RawData = [];
         Calculations = [];
@@ -100,30 +100,36 @@ for i = 1:size(videoList, 1)
         for model = 1:modelListSize
             key = modelList(model).name;
             noCalcs = modelList(model).calculations; %#ok<NASGU>
-            [Model_RawData, Model_Calculations, Axis_Angle] = ... 
+            [Model_RawData, Model_Calculations, Axis_Angle, Column_Names] = ...
                 eval("Process" + key + "Data(Temp" + key + "CSV, Row, VideoResolution(1,2), Axis_Angle, noCalcs);"); %#ok<ASGLU>
             % Append the different RawData and Calculations together, while maintaining the expected order.
             RawData = [RawData, Model_RawData];
             if Model_Calculations ~= 0
                 Calculations = [Calculations, Model_Calculations];
             end
+
+        end
+
+        % Package the names of all columns into the first row
+        if frame == 1
+
         end
         
         
         actualDataSize = size (RawData, 2);
         % Override current row with the processed data output.
-        DLC_RawData(Row,1:actualDataSize) = RawData;
-        DLC_Calculations(Row,1:length(Calculations)) = Calculations;
+        DLC_RawData(frame + 1,1:actualDataSize) = RawData;
+        DLC_Calculations(frame + 1,1:length(Calculations)) = Calculations;
 
     end
     
 
     
     % Create data_block using raw data points e.g. x,y,conf.
-    eval(sprintf('data_block%i = DLC_RawData;',i));
+    eval(sprintf('data_block%i = DLC_RawData;',video));
     
     % Create unit_block using calculated values e.g WBA-Right, Axis Angle.
-    eval(sprintf('unit_block%i = DLC_Calculations;',i));
+    eval(sprintf('unit_block%i = DLC_Calculations;',video));
     
     % Get the date and time specified in the video name
     % and convert it to epoch time, save the result as ticktimes_block.
@@ -155,7 +161,7 @@ for i = 1:size(videoList, 1)
         , str2double(m.minutes), str2double(m.seconds));
     ticktime = posixtime(t1); %#ok<NASGU> Used in below eval
     
-    eval(sprintf('ticktimes_block%i = ticktime;',i));
+    eval(sprintf('ticktimes_block%i = ticktime;',video));
     
     clear DLC_Calculations; %Reset so that existing rows aren't just overridden but the entire structure is replaced. 
     clear DLC_RawData; %Reset so that existing rows aren't just overridden but the entire structure is replaced.

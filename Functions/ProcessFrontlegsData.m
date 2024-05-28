@@ -1,4 +1,4 @@
-function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle] = ProcessFrontlegsData(TempFrontlegsCSV, Row , FrameHeight, Axis_Angle, calculations)
+function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle, Column_Names] = ProcessFrontlegsData(TempFrontlegsCSV, Row , FrameHeight, Axis_Angle, calculations)
 %PROCESSFRONTLEGSDATA Calculates Hinge-Distal Angle and Distance, + confidence : for Left and Right
 %   Detailed explanation goes here
 
@@ -8,6 +8,7 @@ function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle] = ProcessFrontl
     
     % Set these to 0 in case calculations aren't required by user
     Frontlegs_Calculations = 0;
+    Column_Names.calculated = "No calculations made for front legs data";
 
     %% Read in Frontlegs label data
     Frontlegs_Hinge_Right_X = TempFrontlegsCSV(Row,2);
@@ -26,11 +27,17 @@ function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle] = ProcessFrontl
     Frontlegs_Distal_Left_Y = FrameHeight - TempFrontlegsCSV(Row,12);
     Frontlegs_Distal_Left_Confidence = TempFrontlegsCSV(Row,13);
     
-    %% Populate RawData by continually appending the data provided by each label. 
-    Frontlegs_RawData = [Frontlegs_Hinge_Right_X, Frontlegs_Hinge_Right_Y, Frontlegs_Hinge_Right_Confidence];
-    Frontlegs_RawData = [Frontlegs_RawData, Frontlegs_Distal_Right_X, Frontlegs_Distal_Right_Y, Frontlegs_Distal_Right_Confidence];
-    Frontlegs_RawData = [Frontlegs_RawData, Frontlegs_Hinge_Left_X, Frontlegs_Hinge_Left_Y, Frontlegs_Hinge_Left_Confidence];
-    Frontlegs_RawData = [Frontlegs_RawData, Frontlegs_Distal_Left_X, Frontlegs_Distal_Left_Y, Frontlegs_Distal_Left_Confidence];
+    % Populate RawData into an array with the data provided by each label.
+    Frontlegs_RawData = [Frontlegs_Hinge_Right_X , Frontlegs_Hinge_Right_Y , Frontlegs_Hinge_Right_Confidence , ...
+                         Frontlegs_Distal_Right_X, Frontlegs_Distal_Right_Y, Frontlegs_Distal_Right_Confidence, ...
+                         Frontlegs_Hinge_Left_X  , Frontlegs_Hinge_Left_Y  , Frontlegs_Hinge_Left_Confidence  , ...
+                         Frontlegs_Distal_Left_X , Frontlegs_Distal_Left_Y , Frontlegs_Distal_Left_Confidence];
+
+    % Populate the column names for data readability
+    Column_Names.raw  = ["Frontlegs_Hinge_Right_X" , "Frontlegs_Hinge_Right_Y" , "Frontlegs_Hinge_Right_Confidence" , ...
+                         "Frontlegs_Distal_Right_X", "Frontlegs_Distal_Right_Y", "Frontlegs_Distal_Right_Confidence", ...
+                         "Frontlegs_Hinge_Left_X"  , "Frontlegs_Hinge_Left_Y"  , "Frontlegs_Hinge_Left_Confidence"  , ...
+                         "Frontlegs_Distal_Left_X" , "Frontlegs_Distal_Left_Y" , "Frontlegs_Distal_Left_Confidence"];
 
     %% FRONTLEGS CALCULATIONS
     %Calculate the angle of the leg from the Hinge to the Distal.
@@ -82,8 +89,17 @@ function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle] = ProcessFrontl
         HingeDistal_Distance_Left = sqrt((HingeDistal_Width_Left^2) + (HingeDistal_Height_Left^2));
         HingeDistal_Distance_Left_Confidence = Frontlegs_Hinge_Left_Confidence * Frontlegs_Distal_Left_Confidence;
         
-        %% Assemble
-        Frontlegs_Calculations = [HingeDistal_Angle_Right, HingeDistal_Angle_Right_Confidence, HingeDistal_Distance_Right, HingeDistal_Distance_Right_Confidence, HingeDistal_Angle_Left, HingeDistal_Angle_Left_Confidence, HingeDistal_Distance_Left, HingeDistal_Distance_Left_Confidence];
+        % Assemble Calculations into an array
+        Frontlegs_Calculations  = [HingeDistal_Angle_Right   , HingeDistal_Angle_Right_Confidence   , ...
+                                   HingeDistal_Distance_Right, HingeDistal_Distance_Right_Confidence, ...
+                                   HingeDistal_Angle_Left    , HingeDistal_Angle_Left_Confidence    , ...
+                                   HingeDistal_Distance_Left , HingeDistal_Distance_Left_Confidence];
+
+        % Assemble string array of all calculation names
+        Column_Names.calculated = ["HingeDistal_Angle_Right"   , "HingeDistal_Angle_Right_Confidence"   , ...
+                                   "HingeDistal_Distance_Right", "HingeDistal_Distance_Right_Confidence", ...
+                                   "HingeDistal_Angle_Left"    , "HingeDistal_Angle_Left_Confidence"    , ...
+                                   "HingeDistal_Distance_Left" , "HingeDistal_Distance_Left_Confidence"];
     end
 end
 

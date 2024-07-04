@@ -148,7 +148,7 @@ if size(videoList) < 1
     return;
 end
 
-%In order to pass several commands to the same (terminal / shell) we need to collate them into a single string.
+% In order to pass several commands to the same (terminal / shell) we need to collate them into a single string.
 AnalysisCommand = ['source /home/hoverfly/anaconda3/bin/activate' ' ' AnacondaEnvironment]; %conda activate DLC2 equivalent (for some reason "conda activate DLC2" doesn't work in this context so we use this alternative)
 AnalysisCommand = strcat(AnalysisCommand,';ipython'); % Add the start of the next command 
 AnalysisCommand = [AnalysisCommand ' ' '''' IpythoncommandsFilePath '''']; % Add a space and then the path to python file encapsulated in '
@@ -188,14 +188,9 @@ if Skippause == 0
     pause(1);
 end        
 
-% Get path to folder where this step is located
-pathName = which('OLStep2');
-pathName = split(pathName, 'OLStep2');
-pathName = pathName{1};
-
 % Create filename
-fileName = "analysisPaths_" + string(datetime('now')) + ".mat";
-filePath = append(pathName, fileName);
+fileName = "OL_Step2_Paths" + string(datetime('now')) + ".mat";
+filePath = append(inputFolderPath, fileName);
 
 % Save required variables for OLStep 3
 save(filePath, "videoList", "modelList", "modelListSize", ...

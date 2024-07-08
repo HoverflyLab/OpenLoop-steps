@@ -18,7 +18,12 @@ AnacondaEnvironment = 'DLC2';       % Name of the Anaconda Environment that hous
 VideoType = '.mp4';                 % Used to identify video files
 MaximumSubFolderDepth = 8;          % Safety to stop this script grabbing too many video files
 MaximumFolderCount = 500;           % Safety to stop this script grabbing too many video files
-IpythoncommandsFilePath = '/home/hoverfly/Desktop/MatlabScripts/OpenLoop/Ipythoncommands.py'; % This script is essential for DLC Analysis to run
+
+% This script is essential for DLC Analysis to run
+IpythoncommandsFilePath = which(dlcAnalysisFcn);
+IpythoncommandsFilePath = IpythoncommandsFilePath.split("dlcAnalysisFcn"); 
+IpythoncommandsFilePath = IpythoncommandsFilePath{1};
+IpythoncommandsFilePath = strcat(IpythoncommandsFilePath, "Ipythoncommands.py");
 
 % Skippause can be used to toggle pauses on or off allowing you to more easily follow along with the output.
 Skippause = 1; % 0 for false (pause) : 1 for true (don't pause)

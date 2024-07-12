@@ -29,7 +29,16 @@ videoType = '.mp4';                 % Used to identify video files
 VideosAnalysed = 0;                 % Counter used to display progress to user
 
 load(filePath, "videoList", "modelList", "modelListSize", ...
-    "totalNumberOfCalculations", "totalNumberOfRawDataPoints", "inputFolderPath")
+    "inputFolderPath")
+
+% Get video list and names from folder
+
+
+% For first video, determine how many models are actually used
+
+% Show popup asking user which calculations they would like
+% (And are actually available to them)
+
 
 % Search each folder and locate all valid .csv files.
 % For each valid video provided
@@ -94,7 +103,7 @@ for video = 1:size(videoList, 1)
     % We add one to the total frames here to account for adding in titles
     % for individual data.
     [Totalframes,~] = size(TempWingsCSV);
-    DLC_RawData(Totalframes + 1,1:totalNumberOfRawDataPoints) = zeros(1,totalNumberOfRawDataPoints); %#ok<AGROW>
+    DLC_RawData(Totalframes + 1,1:72) = zeros(Totalframes + 1,72);
     DLC_Calculations(Totalframes + 1,1:totalNumberOfCalculations) = zeros(1,totalNumberOfCalculations); %#ok<AGROW>
 
     % For each row in the CSV files we run the following calculations

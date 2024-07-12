@@ -18,18 +18,49 @@
 % Note: Confidence values for calculations are obtained by multiplying the relevant confidence values together.
 % ticktime_blocks are equal to the trial start time since epoch 
 
-function runCalculationsAndPackage(filePath)
+function runCalculationsAndPackage()
 
 % Let the user know what is going on
 disp('We will now begin creating the VideoName_DLC_Analysis.mat file')
 
 % NEEDS TO BE ACCURATE
-VideoResolution = [320,240];        %#ok<NASGU> % Used to invert Y values by using the frame height, error supressed as value is used in an 'eval' statement later
-videoType = '.mp4';                 % Used to identify video files
-VideosAnalysed = 0;                 % Counter used to display progress to user
+VideoResolution = inputdlg({'Enter video width:', 'Enter video height:'}, ...
+    'Video Resolution', [1 45], {'320', '240'}); %#ok<NASGU> Used to invert Y values by using the frame height, error supressed as value is used in an 'eval' statement later     
+videoType = inputdlg('Enter video type:', ...
+    'Choose video extension', [1 45], ".mp4");   % Used to identify video files
+VideosAnalysed = 0;                              % Counter used to display progress to user
 
-load(filePath, "videoList", "modelList", "modelListSize", ...
-    "inputFolderPath")
+% Ask user to locate the inputFolderPath where the videos they wish to analyse should be located
+inputFolderPath = uigetdir('/home/hoverfly/Desktop/', 'Location of Videos to analyse');
+
+%Find all files within the folder
+TempFileList = dir(fullfile(DirectoryList(i).filepath));
+
+%For each file remembering to skip the first two as they are . ..
+for j = 3:size(TempFileList)
+    
+    %If the file contains a valid video type e.g. filename contains .mp4
+    if not(isempty(strfind(TempFileList(j).name,VideoType)))
+        
+        %If the video is not a labeled video e.g. filename contains labeled
+        if isempty(strfind(TempFileList(j).name,'labeled'))
+            
+            %Add folderpath to structure
+            TempFileList(j).folderpath = DirectoryList(i).filepath;
+            
+            %Add filepath to structure
+            TempFileList(j).filepath = strcat(DirectoryList(i).filepath,'/',TempFileList(j).name);
+            
+            %Add to VideoList
+            videoList = [videoList;TempFileList(j)];
+
+        end
+    end
+end
+
+
+% NEED REPLACEMENTS FOR ALL FILES HERE
+load(filePath, "modelList", "modelListSize")
 
 % Get video list and names from folder
 
@@ -54,7 +85,7 @@ for video = 1:size(videoList, 1)
     TempCSVFiles = [];
     
     % Seperate the name of the file from its file extension e.g. .mp4
-    TempFileName = strsplit(videoList(video).name,videoType);
+    TempFileName = strsplit(videoList(video).name,videoType{1});
     TempFileName = TempFileName{1};
     
     % Search through each file in the directory and find the csv files
@@ -116,7 +147,7 @@ for video = 1:size(videoList, 1)
             key = modelList(model).name;
             noCalcs = modelList(model).calculations; %#ok<NASGU>
             [Model_RawData, Model_Calculations, Axis_Angle, Column_Names] = ...
-                eval("Process" + key + "Data(Temp" + key + "CSV, Row, VideoResolution(1,2), Axis_Angle, noCalcs);"); %#ok<ASGLU>
+                eval("Process" + key + "Data(Temp" + key + "CSV, Row, VideoResolution{2}, Axis_Angle, noCalcs);"); %#ok<ASGLU>
             % Append the different RawData and Calculations together, while maintaining the expected order.
             RawData = [RawData, Model_RawData];
             if Model_Calculations ~= 0

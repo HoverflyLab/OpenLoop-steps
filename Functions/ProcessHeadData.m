@@ -50,7 +50,7 @@ function [Head_RawData, Head_Calculations, Axis_Angle, Column_Names] = ProcessHe
                         "Head_Midline_5_X"          , "Head_Midline_5_Y"          , "Head_Midline_5_Confidence"         , ...
                         "Head_Midline_Posterior_6_X", "Head_Midline_Posterior_6_Y", "Head_Midline_Posterior_6_Confidence"];
     
-    if calculations ~= 0
+    if calculations == 'y'
         %% HEAD LINE OF BEST FIT CALCULATIONS
         %Calculate confidence value (by multiplying confidence of each point together)
         %Calculate average slope of all points

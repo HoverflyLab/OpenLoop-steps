@@ -1,4 +1,4 @@
-function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle, Column_Names] = ProcessFrontlegsData(TempFrontlegsCSV, Row , FrameHeight, Axis_Angle, calculations)
+function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle, Column_Names] = ProcessFrontLegsData(TempFrontlegsCSV, Row , FrameHeight, Axis_Angle, calculations)
 %PROCESSFRONTLEGSDATA Calculates Hinge-Distal Angle and Distance, + confidence : for Left and Right
 %   Detailed explanation goes here
 
@@ -43,7 +43,7 @@ function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle, Column_Names] =
     %Calculate the angle of the leg from the Hinge to the Distal.
     %Calculate the distance from the Hinge point to the Distal.
     
-    if calculations ~= 0
+    if calculations == 'y'
         %% Angle of the Frontleg
         %Calculate the Slope Height and Width of the Hinge point to Distal point.
         HingeDistal_Width_Right = Frontlegs_Distal_Right_X - Frontlegs_Hinge_Right_X;

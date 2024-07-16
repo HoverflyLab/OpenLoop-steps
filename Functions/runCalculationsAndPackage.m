@@ -53,7 +53,7 @@ end
 % This is kinda really dodgy, keep an open mind to fix this shit later
 csvFileList = dir(fullfile([inputFolderPath, '/*.csv']));
 [modelList, inputStr, inputDef, boxSize] = findModelsUsed(videoList(1), csvFileList);
-modelListSize = size(modelList);
+modelListSize = size(modelList, 2);
 
 % Show popup asking user which calculations they would like
 % (And are actually available to them)
@@ -69,30 +69,21 @@ for video = 1:size(videoList, 1)
     disp(message);
 
     % Find all files within the folder
-    TempFileList = dir(fullfile(videoList(video).folderpath));
     TempCSVFiles = [];
     
     % Seperate the name of the file from its file extension e.g. .mp4
     TempFileName = strsplit(videoList(video).name,videoType{1});
     TempFileName = TempFileName{1};
     
-    % Search through each file in the directory and find the csv files
-    % For each file remembering to skip the first two as they are . ..
-    for j = 3:size(TempFileList)
-        
+    % Search through each csv file in the directory
+    for j = 1:size(csvFileList)
         % If the file contains the name of the video (a convention followed by DLC)
-        if not(isempty(strfind(TempFileList(j).name,TempFileName)))
-            
-            % If the file is a csv e.g. contains .csv
-            if not(isempty(strfind(TempFileList(j).name,'.csv')))
-                
-                for k = 1:modelListSize
-                    
-                    % If the csv contains the keyword e.g. Wings, Head, Hindlegs, Frontlegs.
-                    if not(isempty(strfind(TempFileList(j).name,modelList(k))))
-                        TempCSVFiles(k).keyword = modelList(k);
-                        TempCSVFiles(k).filepath = strcat(videoList(video).folderpath,'/',TempFileList(j).name);
-                    end
+        if not(isempty(strfind(csvFileList(j).name,TempFileName)))
+            for k = 1:modelListSize
+                % If the csv contains the keyword e.g. Wings, Head, Hindlegs, Frontlegs.
+                if not(isempty(strfind(csvFileList(j).name,modelList{k})))
+                    TempCSVFiles(k).keyword = modelList{k};
+                    TempCSVFiles(k).filepath = strcat(videoList(video).folder,'/',csvFileList(j).name);
                 end
             end
         end
@@ -110,6 +101,7 @@ for video = 1:size(videoList, 1)
     if CSVListSize ~= modelListSize
         % Keywords are case sensitive e.g. a keyword value of 'HindLegs' will not find csv files that include 'Hindlegs'.
         warning('Warning - Could not find the expected CSV files for %s, are all keywords correct?', TempFileName);
+        returnStatus = 0;
         return
     end
 
@@ -122,10 +114,9 @@ for video = 1:size(videoList, 1)
     % We add one to the total frames here to account for adding in titles
     % for individual data.
 
-    % DODGY ASS LINE CHANGE THIS FOR THE LOVE OF GOD
+    % Get total amount of frames from current video
     [Totalframes,~] = size(TempWingsCSV);
-    DLC_RawData(Totalframes + 1,1:72) = zeros(Totalframes + 1,72);
-    DLC_Calculations(Totalframes + 1,1:totalNumberOfCalculations) = zeros(1,totalNumberOfCalculations); %#ok<AGROW>
+
 
     % For each row in the CSV files we run the following calculations
     for frame = 1:Totalframes
@@ -135,9 +126,9 @@ for video = 1:size(videoList, 1)
         Axis_Angle = 0; %#ok<NASGU> used in an eval statement
         for model = 1:modelListSize
             key = modelList(model);
-            useCalcs = calculationChoices(model); %#ok<NASGU> used in an eval statement
+            useCalcs = calculationChoices{model}; %#ok<NASGU> used in an eval statement
             [Model_RawData, Model_Calculations, Axis_Angle, Column_Names] = ...
-                eval("Process" + key + "Data(Temp" + key + "CSV, Row, VideoResolution{2}, Axis_Angle, noCalcs);"); %#ok<ASGLU>
+                eval("Process" + key + "Data(Temp" + key + "CSV, frame, str2double(VideoResolution{2}), Axis_Angle, useCalcs);"); %#ok<ASGLU>
             % Append the different RawData and Calculations together, while maintaining the expected order.
             RawData = [RawData, Model_RawData];
             if Model_Calculations ~= 0
@@ -154,20 +145,27 @@ for video = 1:size(videoList, 1)
 
         end
 
-        actualDataSize = size (RawData, 2);
-        % Package the names of all columns into the first row
+        % On first frame, initialise data
         if frame == 1
-            DLC_RawData(1, 1:actualDataSize) = dataHeaders;
-            DLC_Calculations(1, 1:length(Calculations)) = calcHeaders;
+            DLC_RawData = cell(Totalframes + 1, length(RawData));
+            DLC_Calculations = cell(Totalframes + 1, length(Calculations));
+            for i = 1:length(dataHeaders)
+                DLC_RawData{1, i} = dataHeaders(i);
+            end
+            for i = 1:length(calcHeaders)
+                DLC_Calculations{1, i} = calcHeaders(i);
+            end
         end
 
         % Override current row with the processed data output.
-        DLC_RawData(frame + 1,1:actualDataSize) = RawData;
-        DLC_Calculations(frame + 1,1:length(Calculations)) = Calculations;
-
+        for i = 1:length(RawData)
+                DLC_RawData{frame + 1, i} = RawData(i);
+        end
+        for i = 1:length(Calculations)
+                DLC_Calculations{frame + 1, i} = Calculations(i);
+        end
     end
     
-
     
     % Create data_block using raw data points e.g. x,y,conf.
     eval(sprintf('data_block%i = DLC_RawData;',video));
@@ -184,7 +182,6 @@ for video = 1:size(videoList, 1)
     % datetime format.
 
     format longG;
-    FileDate = strsplit(TempFileName,{'_','.',' '});
     
     % Write down expected datetime formats
     patterns = [ ...

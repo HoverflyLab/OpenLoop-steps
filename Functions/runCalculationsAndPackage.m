@@ -60,6 +60,8 @@ modelListSize = size(modelList, 2);
 calculationChoices = inputdlg(inputStr, ...
     'Chose calculations', boxSize, inputDef);
 
+analysisCounter = 1;
+
 % Search each folder and locate all valid .csv files.
 % For each valid video provided
 for video = 1:size(videoList, 1)
@@ -67,6 +69,15 @@ for video = 1:size(videoList, 1)
     % Print a status message so the user knows what's going on internally
     message = sprintf('Analysing video %d out of %d\n',video, size(videoList, 1));
     disp(message);
+
+    % If the video is a labeled video, ignore and go to next iteration
+    if ~isempty(strfind(TempFileList(video).name,'labeled'))
+        % Clear analysis video message for a clean command window 
+        for character = 1 : length(message) + 1
+            fprintf('\b')
+        end
+        continue
+    end
 
     % Find all files within the folder
     TempCSVFiles = [];
@@ -77,11 +88,12 @@ for video = 1:size(videoList, 1)
     
     % Search through each csv file in the directory
     for j = 1:size(csvFileList)
-        % If the file contains the name of the video (a convention followed by DLC)
+        % If the file contains the name of the video (a convention followed
+        % by DLC) and does not contain 'labeled'
         if not(isempty(strfind(csvFileList(j).name,TempFileName)))
             for k = 1:modelListSize
                 % If the csv contains the keyword e.g. Wings, Head, Hindlegs, Frontlegs.
-                if not(isempty(strfind(csvFileList(j).name,modelList{k})))
+                if not(isempty(regexpi(csvFileList(j).name,modelList{k}, 'ONCE')))
                     TempCSVFiles(k).keyword = modelList{k};
                     TempCSVFiles(k).filepath = strcat(videoList(video).folder,'/',csvFileList(j).name);
                 end
@@ -107,16 +119,14 @@ for video = 1:size(videoList, 1)
 
     for model = 1:modelListSize
         eval("Temp" + modelList(model) + "CSV = csvread(TempCSVFiles(" + model + ").filepath,3,0);");
+        % Get total amount of frames from current video
+        eval("[Totalframes,~] = size(Temp" + modelList(model) + "CSV);");
     end
 
     % Initialise entire data set with arbitrary values, stops the script from continuously allocating memory later on.
     % All csv files should be the same size
     % We add one to the total frames here to account for adding in titles
     % for individual data.
-
-    % Get total amount of frames from current video
-    [Totalframes,~] = size(TempWingsCSV);
-
 
     % For each row in the CSV files we run the following calculations
     for frame = 1:Totalframes
@@ -142,7 +152,6 @@ for video = 1:size(videoList, 1)
                 dataHeaders = [dataHeaders, Column_Names.raw]; %#ok<AGROW>
                 calcHeaders = [calcHeaders, Column_Names.calculated]; %#ok<AGROW>
             end
-
         end
 
         % On first frame, initialise data
@@ -168,10 +177,10 @@ for video = 1:size(videoList, 1)
     
     
     % Create data_block using raw data points e.g. x,y,conf.
-    eval(sprintf('data_block%i = DLC_RawData;',video));
+    eval(sprintf('data_block%i = DLC_RawData;',analysisCounter));
     
     % Create unit_block using calculated values e.g WBA-Right, Axis Angle.
-    eval(sprintf('unit_block%i = DLC_Calculations;',video));
+    eval(sprintf('unit_block%i = DLC_Calculations;',analysisCounter));
     
     % Get the date and time specified in the video name
     % and convert it to epoch time, save the result as ticktimes_block.
@@ -202,7 +211,7 @@ for video = 1:size(videoList, 1)
         , str2double(m.minutes), str2double(m.seconds));
     ticktime = posixtime(t1); %#ok<NASGU> Used in below eval
     
-    eval(sprintf('ticktimes_block%i = ticktime;',video));
+    eval(sprintf('ticktimes_block%i = ticktime;',analysisCounter));
     
     clear DLC_Calculations; %Reset so that existing rows aren't just overridden but the entire structure is replaced. 
     clear DLC_RawData; %Reset so that existing rows aren't just overridden but the entire structure is replaced.
@@ -213,6 +222,7 @@ for video = 1:size(videoList, 1)
     for character = 1 : length(message) + 1
         fprintf('\b')
     end
+    analysisCounter = analysisCounter + 1;
 end
 
 FileDate = strcat(m.day,'-', m.month,'-', m.year,'_', m.hours, m.minutes, m.seconds);

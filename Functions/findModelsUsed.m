@@ -1,4 +1,4 @@
-function [modelList, inputStrings, inputDefaults, boxSize] = findModelsUsed(video, csvFiles)
+function [modelList, inputStrings, inputDefaults, boxSize, keykey] = findModelsUsed(video, csvFiles)
 % function findModelsUsed: Using a single video, determine which models 
 % the user employed when doing their DLC analysis
 
@@ -27,7 +27,7 @@ inputDefaults = cell(1, length(models));
 % Loop over all models
 count = 1;
 for i = 1:length(models)
-    tempModelTest = regexp(allFiles, models(i));
+    tempModelTest = regexpi(allFiles, models(i));
     tempModelTest = tempModelTest(~cellfun('isempty', tempModelTest));
     % If we've found a match for a model, add to the list!
     if ~isempty(tempModelTest)
@@ -39,6 +39,7 @@ for i = 1:length(models)
 end
 
 % Cull model lists if they aren't full
+modelList = modelList(~cellfun('isempty', modelList));
 inputStrings = inputStrings(~cellfun('isempty', inputStrings));
 inputDefaults = inputDefaults(~cellfun('isempty', inputDefaults));
 

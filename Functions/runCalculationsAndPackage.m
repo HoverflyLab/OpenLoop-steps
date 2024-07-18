@@ -101,7 +101,7 @@ for video = 1:size(videoList, 1)
             key = modelList(model).name;
             noCalcs = modelList(model).calculations; %#ok<NASGU>
             [Model_RawData, Model_Calculations, Axis_Angle, Column_Names] = ...
-                eval("Process" + key + "Data(Temp" + key + "CSV, Row, VideoResolution(1,2), Axis_Angle, noCalcs);"); %#ok<ASGLU>
+                eval("Process" + key + "Data(Temp" + key + "CSV, frame, VideoResolution(1,2), Axis_Angle, noCalcs);"); %#ok<ASGLU>
             % Append the different RawData and Calculations together, while maintaining the expected order.
             RawData = [RawData, Model_RawData];
             if Model_Calculations ~= 0

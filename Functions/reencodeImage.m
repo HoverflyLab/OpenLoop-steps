@@ -1,6 +1,4 @@
-% Written by Raymond Aoukar and Chris Johnston - last updated 2023-04-11
-% This script is used to re-encode the video files produced by Guvcview to work properly with Deeplabcut 
-function reencodeImage(inputFolderPath, outputFolderPath)
+function reencodeImage(inputFolderPath, outputFolderPath, inputParameterPath)
 
 % Check to make sure both file paths are valid before continuing
 if(length(inputFolderPath) <= 1 || length(outputFolderPath) <= 1)
@@ -9,7 +7,7 @@ if(length(inputFolderPath) <= 1 || length(outputFolderPath) <= 1)
 end
 
 % Find all mp4 files and add them to an array, then calculate the size of the array
-MAT_Array = dir(fullfile(inputFolderPath, '*.mat')); 
+MAT_Array = dir(fullfile(inputParameterPath, '*.mat')); 
 % Length of stimuli to loop over
 [m,~] = size(MAT_Array);
 % Get the names of the .mat files themselves
@@ -36,12 +34,14 @@ timeStamps = cellfun(@(x) strrep(strrep(x, '_', ''), '.jpg', ''), imageNames, 'U
 
 % Loop over each .mat file to make videos
 for filenum = 1:m
-    matInput = string(inputFolderPath) + "/" + string(cell2mat(MAT_FileArray(filenum)));
+    matInput = string(inputParameterPath) + "/" + string(cell2mat(MAT_FileArray(filenum)));
 
     % Load start and stop times for stimuli and format them nicely
     load(matInput, "timeStartPrecision", "timeEndPrecision");
-    startTime = str2double(strrep(timeStartPrecision, ':', ''));
-    endTime = str2double(strrep(timeEndPrecision, ':', ''));
+    timeStartPrecision = strsplit(timeStartPrecision, " ");
+    timeEndPrecision = strsplit(timeEndPrecision, " ");
+    startTime = str2double(strrep(timeStartPrecision{2}, ':', ''));
+    endTime = str2double(strrep(timeEndPrecision{2}, ':', ''));
     
     % Allocate space for speed
     startConditionMet = zeros(imageCount,1);

@@ -12,28 +12,24 @@
 % e.g. the filepath variable contains the full filepath leading to the config.yaml file.
 % nooflabels, labels and calculations also must be accurate.
 
-function videoPath = dlcAnalysisFcn(modelList)
+function dlcAnalysisFcn(modelList)
 % Hard Coded Variables (must be accurate)
 AnacondaEnvironment = 'DLC2';       % Name of the Anaconda Environment that houses the version of DLC we wish to use.
 VideoType = '.mp4';                 % Used to identify video files
 MaximumSubFolderDepth = 8;          % Safety to stop this script grabbing too many video files
 MaximumFolderCount = 500;           % Safety to stop this script grabbing too many video files
-IpythoncommandsFilePath = '/home/hoverfly/Desktop/MatlabScripts/OpenLoop/Ipythoncommands.py'; % This script is essential for DLC Analysis to run
 
-% Skippause can be used to toggle pauses on or off allowing you to more easily follow along with the output.
-Skippause = 1; % 0 for false (pause) : 1 for true (don't pause)
-
-% Model Information (must be accurate)
-% A list of the DLC models each video should be analysed by
-% keyword refers to a Unique ID that can be used to identify each model's .csv files
+% This script is essential for DLC Analysis to run
+IpythoncommandsFilePath = which("dlcAnalysisFcn");
+IpythoncommandsFilePath = split(IpythoncommandsFilePath, "dlcAnalysisFcn"); 
+IpythoncommandsFilePath = IpythoncommandsFilePath{1};
+IpythoncommandsFilePath = strcat(IpythoncommandsFilePath, "Ipythoncommands.py");
 
 % Variables
 videoList = [];
 
 % Get size of ModelList (we are only interested in Y value)
 [~, modelListSize] = size(modelList);
-totalNumberOfCalculations = 0;
-totalNumberOfRawDataPoints = 0;
 
 if ~isfile(IpythoncommandsFilePath)
     warning('IpythoncommandsFilePath is not valid')
@@ -50,16 +46,6 @@ for i = 1:modelListSize
     fprintf('This script expects the %s model to have %i labels, identically named and ordered as follows\n',modelList(i).keyword,modelList(i).nooflabels);
     disp(strrep(modelList(i).labels,',',', '));
     disp(' ');
-    
-    %Get the total number of calculations that will be required
-    totalNumberOfCalculations = totalNumberOfCalculations + modelList(i).calculations;
-    totalNumberOfRawDataPoints = totalNumberOfRawDataPoints + (modelList(i).nooflabels * 3); %each label has a value for (x,y,confidence)
-    
-    pause(1);
-end
-
-if(Skippause == 0)
-    pause(3)
 end
 
 % Ask user to locate the inputFolderPath where the videos they wish to analyse should be located
@@ -148,10 +134,10 @@ if size(videoList) < 1
     return;
 end
 
-%In order to pass several commands to the same (terminal / shell) we need to collate them into a single string.
+% In order to pass several commands to the same (terminal / shell) we need to collate them into a single string.
 AnalysisCommand = ['source /home/hoverfly/anaconda3/bin/activate' ' ' AnacondaEnvironment]; %conda activate DLC2 equivalent (for some reason "conda activate DLC2" doesn't work in this context so we use this alternative)
-AnalysisCommand = strcat(AnalysisCommand,';ipython'); % Add the start of the next command 
-AnalysisCommand = [AnalysisCommand ' ' '''' IpythoncommandsFilePath '''']; % Add a space and then the path to python file encapsulated in '
+AnalysisCommand = [AnalysisCommand ';ipython']; % Add the start of the next command 
+AnalysisCommand = [AnalysisCommand ' ' '''' convertStringsToChars(IpythoncommandsFilePath) '''']; % Add a space and then the path to python file encapsulated in '
 AnalysisCommand = [AnalysisCommand ' ' '''']; % Adds a space and begins encapsulation of the argument being passed to the python file in ' as '''' converts to a single '
 
 app.analysisProgressLabel.Text = sprintf('0 out of %i videos have been analyzed by deeplabcut\n', (size(videoList,1)));
@@ -180,26 +166,4 @@ for i = 1:size(videoList)
     app.analysisProgressLabel.Text = progress;
 end
 
-if Skippause == 0
-    pause(2); % This is here only so you can see how many videos are about to be analysed
-end
-
-if Skippause == 0
-    pause(1);
-end        
-
-% Get path to folder where this step is located
-pathName = which('OLStep2');
-pathName = split(pathName, 'OLStep2');
-pathName = pathName{1};
-
-% Create filename
-fileName = "analysisPaths_" + string(datetime('now')) + ".mat";
-filePath = append(pathName, fileName);
-
-% Save required variables for OLStep 3
-save(filePath, "videoList", "modelList", "modelListSize", ...
-    "totalNumberOfCalculations", "totalNumberOfRawDataPoints", "inputFolderPath")
-
-videoPath = filePath;
-fprintf('Analysis complete, file required for OLStep3 saved as %s\n', filePath);
+fprintf('DLC analysis complete\n');

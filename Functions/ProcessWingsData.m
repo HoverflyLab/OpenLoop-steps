@@ -57,7 +57,7 @@ function [Wings_RawData, Wings_Calculations, Axis_Angle, Column_Names] = Process
     %Wing SlopeWidth and SlopeHeight
     %Calculate the WBA using the slopes
     
-    if calculations ~= 0
+    if calculations == 'y'
         %% Calculate confidence values (by multiplying confidence of each point together).
         WBA_Right_Confidence = Wings_Hinge_Right_Confidence * Wings_Distal_Right_Confidence;
         WBA_Left_Confidence = Wings_Hinge_Left_Confidence * Wings_Distal_Left_Confidence;

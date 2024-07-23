@@ -1,4 +1,4 @@
-function [Hindlegs_RawData, Hindlegs_Calculations, Axis_Angle, Column_Names] = ProcessHindlegsData(TempHindlegsCSV, Row , FrameHeight, Axis_Angle, calculations)
+function [Hindlegs_RawData, Hindlegs_Calculations, Axis_Angle, Column_Names] = ProcessHindLegsData(TempHindlegsCSV, Row , FrameHeight, Axis_Angle, calculations)
 %PROCESSHINDLEGSDATA Proximal-Knee Angle and Distance, Knee-Distal Angle and Distance, Area, + confidence for each, Right and Left
 
     %% IMPORTANT - DLC Y values are inverted so we need to take the Y
@@ -67,7 +67,7 @@ function [Hindlegs_RawData, Hindlegs_Calculations, Axis_Angle, Column_Names] = P
     %Calculate the angle from the Knee to the Distal point.
     %Calculate the distance from the Knee to the Distal point.
     
-    if calculations ~= 0
+    if calculations == 'y'
         %% Calculate the angle of the leg from the Proximal point to the Knee.
         ProximalKnee_Width_Right = Hindlegs_Knee_Right_X - Hindlegs_Proximal_Right_X;
         ProximalKnee_Height_Right = Hindlegs_Knee_Right_Y - Hindlegs_Proximal_Right_Y;

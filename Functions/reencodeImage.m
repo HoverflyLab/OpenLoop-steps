@@ -1,4 +1,4 @@
-function reencodeImage(inputFolderPath, outputFolderPath, inputParameterPath)
+function reencodeImage(inputFolderPath, outputFolderPath, inputParameterPath, systemLatency)
 
 % Check to make sure both file paths are valid before continuing
 if(length(inputFolderPath) <= 1 || length(outputFolderPath) <= 1)
@@ -40,7 +40,7 @@ for filenum = 1:m
     load(matInput, "timeStartPrecision", "timeEndPrecision");
     timeStartPrecision = strsplit(timeStartPrecision, " ");
     timeEndPrecision = strsplit(timeEndPrecision, " ");
-    startTime = str2double(strrep(timeStartPrecision{2}, ':', ''));
+    startTime = str2double(strrep(timeStartPrecision{2}, ':', '')) + systemLatency;
     endTime = str2double(strrep(timeEndPrecision{2}, ':', ''));
     
     % Allocate space for speed
@@ -55,7 +55,14 @@ for filenum = 1:m
     end
     
     % Find time moment when trigger condition has been met
-    startMomentIndex = find(diff(startConditionMet)==1, 1, 'first') - 1;
+    startMomentIndex = find(diff(startConditionMet)==1, 1, 'first');
+    % Determine which frame timestamp is closer to the actual start of the
+    % stimuli
+    t0 = abs(startTime - str2double(timeStamps{startMomentIndex}));
+    t1 = abs(startTime - str2double(timeStamps{startMomentIndex + 1}));
+    if t1 < t0
+        startMomentIndex = startMomentIndex + 1;
+    end
     stopMomentIndex = find(diff(stopConditionMet)==1, 1, 'first');
     
     % Rename all files to something easy for ffmpeg to work with

@@ -14,8 +14,10 @@ MAT_Array = dir(fullfile(inputParameterPath, '*.mat'));
 MAT_FileArray = struct2cell(MAT_Array);
 MAT_FileArray = MAT_FileArray(1,:);
 
-% Get list of all images
-imageList = dir(fullfile(inputFolderPath, '*.bmp'));
+% Get list of all images\
+videoType = inputdlg('Enter image type:', ...
+    'Choose video extension', [1 45], ".jpg"); 
+imageList = dir(fullfile(inputFolderPath, ['*' videoType]));
 
 % Get all picture names and paths into an array
 imageNames = arrayfun(@(x) x.name, imageList, 'UniformOutput', false);

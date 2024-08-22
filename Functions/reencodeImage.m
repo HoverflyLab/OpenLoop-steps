@@ -6,6 +6,9 @@ if(length(inputFolderPath) <= 1 || length(outputFolderPath) <= 1)
     return;
 end
 
+imageType = inputdlg('Enter image type:', ...
+    'Choose image extension', [1 45], '.jpg');   % Used to identify video files
+
 % Find all mp4 files and add them to an array, then calculate the size of the array
 MAT_Array = dir(fullfile(inputParameterPath, '*.mat')); 
 % Length of stimuli to loop over
@@ -14,10 +17,8 @@ MAT_Array = dir(fullfile(inputParameterPath, '*.mat'));
 MAT_FileArray = struct2cell(MAT_Array);
 MAT_FileArray = MAT_FileArray(1,:);
 
-% Get list of all images\
-videoType = inputdlg('Enter image type:', ...
-    'Choose video extension', [1 45], ".jpg"); 
-imageList = dir(fullfile(inputFolderPath, ['*' videoType]));
+% Get list of all images
+imageList = dir(fullfile(inputFolderPath, ['*' imageType]));
 
 % Get all picture names and paths into an array
 imageNames = arrayfun(@(x) x.name, imageList, 'UniformOutput', false);
@@ -32,7 +33,7 @@ for imageNo = 1:imageCount
 end
 
 % Get all file times as a string
-timeStamps = cellfun(@(x) strrep(strrep(x, '_', ''), '.bmp', ''), imageNames, 'UniformOutput', false);
+timeStamps = cellfun(@(x) strrep(strrep(x, '_', ''), imageType, ''), imageNames, 'UniformOutput', false);
 
 % Loop over each .mat file to make videos
 for filenum = 1:m
@@ -70,7 +71,7 @@ for filenum = 1:m
     % Rename all files to something easy for ffmpeg to work with
     newPath = cell(stopMomentIndex - startMomentIndex);
     for imageNo = 1:(stopMomentIndex - startMomentIndex) 
-        newPath{imageNo} = string(inputFolderPath) + "/recording" + num2str(imageNo) + ".bmp";
+        newPath{imageNo} = string(inputFolderPath) + "/recording" + num2str(imageNo) + convertCharsToStrings(imageType);
         movefile(imagePaths{imageNo + startMomentIndex}, newPath{imageNo})
     end
 
@@ -83,7 +84,7 @@ for filenum = 1:m
     % Take in all images (in chronological order) and make a 100 FPS video
     % command = 'ffmpeg -i "' + inputFolderPath + 'recording%d.jpg" -c:v libx264 "' ...
     %     + ffoutput + '" -r 100 test.mp4';
-    command = ['ffmpeg -i ', 34, inputFolderPath, '/recording%d.bmp', 34, ...
+    command = ['ffmpeg -i ', 34, inputFolderPath, '/recording%d', imageType, 34, ...
         ' -c:v libx264 ', 34, ffoutput, 34, ...
         ' -r 100'];   
     [~, ~] = system(command, '-echo');

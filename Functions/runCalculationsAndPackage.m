@@ -18,7 +18,8 @@
 % Note: Confidence values for calculations are obtained by multiplying the relevant confidence values together.
 % ticktime_blocks are equal to the trial start time since epoch 
 
-function returnStatus = runCalculationsAndPackage()
+function returnStatus = runCalculationsAndPackage(padOut)
+% padOut: Boolean: Represents whether or not to pad missing stimuli columns
 % Wrap function in try / catch for error handling
 try
 
@@ -52,8 +53,8 @@ end
 % For first video, determine how many models are actually used
 % This is kinda really dodgy, keep an open mind to fix this shit later
 csvFileList = dir(fullfile([inputFolderPath, '/*.csv']));
-[modelList, inputStr, inputDef, boxSize] = findModelsUsed(videoList(1), csvFileList);
-modelListSize = size(modelList, 2);
+[allModels, usedModelList, inputStr, inputDef, boxSize] = findModelsUsed(videoList(1), csvFileList);
+modelListSize = size(usedModelList, 2);
 
 % Show popup asking user which calculations they would like
 % (And are actually available to them)
@@ -93,8 +94,8 @@ for video = 1:size(videoList, 1)
         if not(isempty(strfind(csvFileList(j).name,TempFileName)))
             for k = 1:modelListSize
                 % If the csv contains the keyword e.g. Wings, Head, Hindlegs, Frontlegs.
-                if not(isempty(regexpi(csvFileList(j).name,modelList{k}, 'ONCE')))
-                    TempCSVFiles(k).keyword = modelList{k};
+                if not(isempty(regexpi(csvFileList(j).name,usedModelList{k}, 'ONCE')))
+                    TempCSVFiles(k).keyword = usedModelList{k};
                     TempCSVFiles(k).filepath = strcat(videoList(video).folder,'/',csvFileList(j).name);
                 end
             end
@@ -118,9 +119,9 @@ for video = 1:size(videoList, 1)
     end
 
     for model = 1:modelListSize
-        eval("Temp" + modelList(model) + "CSV = csvread(TempCSVFiles(" + model + ").filepath,3,0);");
+        eval("Temp" + usedModelList(model) + "CSV = csvread(TempCSVFiles(" + model + ").filepath,3,0);");
         % Get total amount of frames from current video
-        eval("[Totalframes,~] = size(Temp" + modelList(model) + "CSV);");
+        eval("[Totalframes,~] = size(Temp" + usedModelList(model) + "CSV);");
     end
 
     % Initialise entire data set with arbitrary values, stops the script from continuously allocating memory later on.
@@ -134,8 +135,8 @@ for video = 1:size(videoList, 1)
         RawData = [];
         Calculations = [];
         Axis_Angle = 0; %#ok<NASGU> used in an eval statement
-        for model = 1:modelListSize
-            key = modelList(model);
+        for model = 1:length(allModels)
+            key = allModels(model);
             useCalcs = calculationChoices{model}; %#ok<NASGU> used in an eval statement
             [Model_RawData, Model_Calculations, Axis_Angle, Column_Names] = ...
                 eval("Process" + key + "Data(Temp" + key + "CSV, frame, str2double(VideoResolution{2}), Axis_Angle, useCalcs);"); %#ok<ASGLU>
@@ -174,6 +175,8 @@ for video = 1:size(videoList, 1)
                 DLC_Calculations{frame + 1, i} = Calculations(i);
         end
     end
+
+    % Do squishing of data and calculations here, JAXON
     
     
     % Create data_block using raw data points e.g. x,y,conf.

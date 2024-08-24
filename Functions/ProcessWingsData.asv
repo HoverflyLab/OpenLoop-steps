@@ -1,11 +1,8 @@
-function [Wings_RawData, Wings_Calculations, Axis_Angle, Column_Names] = ProcessWingsData(usePadding, TempWingsCSV, Row, FrameHeight, ~, calculations)
+function [Wings_RawData, Wings_Calculations, Axis_Angle, Column_Names] = ProcessWingsData(TempWingsCSV, Row, FrameHeight, ~, calculations)
 %PROCESSWINGDATA Calculates Right and Left Wing Beat Amplitude
 
-% Check if we're using this function with data, if not, check if we want to
-% pad the results with empty space to make it easier for the user's
-% analysis scripts
-if ~exist('TempWingsCSV', 'var') && usePadding == 1
-    
+% Check if we're using this function with data
+if ~exist('TempWingsCSV', 'var')
 
 end
 

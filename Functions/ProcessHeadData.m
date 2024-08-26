@@ -1,7 +1,22 @@
-function [Head_RawData, Head_Calculations, Axis_Angle, Column_Names] = ProcessHeadData(TempHeadCSV, Row , FrameHeight, Axis_Angle, calculations)
+function [Head_RawData, Head_Calculations, Axis_Angle, Column_Names] = ProcessHeadData(usePadding, TempHeadCSV, Row , FrameHeight, Axis_Angle, calculations)
 %PROCESSHEADDATA Calculates the line of best fit for the Head
 
-    %% IMPORTANT - DLC Y values are inverted so we need to take the Y
+        % Check if we're using this function with data, if not, check if we want to
+        % pad the results with empty space to make it easier for the user's
+        % analysis scripts
+        if ~exist('TempHeadCSV', 'var') && usePadding == 1
+            % Recreate the column names so the user can see what's missing
+            Column_Names.raw = getRawNames();
+            Column_Names.calculated = getCalcNames();
+            % Pad out zeros for the unused data
+            Head_RawData = zeros(1,length(column_Names.raw));
+            Head_Calculations = zeros(1,length(Column_Names.calculated));
+            % We were only padding out values, so go back to the main code
+            return
+        elseif ~exist('TempHeadCSV', 'var') && usePadding ~= 1
+            return
+        end
+    % IMPORTANT - DLC Y values are inverted so we need to take the Y
     %value given from the resolution of the frame, this allows us to work with Y values that
     %match standard graphing conventions. e.g. X value increases left to right, Y value increases bottom to top.
     
@@ -9,7 +24,7 @@ function [Head_RawData, Head_Calculations, Axis_Angle, Column_Names] = ProcessHe
     Head_Calculations = 0;
     Column_Names.calculated = "No calculations made for head data";
 
-    %% Read in Head label data
+    % Read in Head label data
     Head_Midline_Anterior_1_X = TempHeadCSV(Row,2);
     Head_Midline_Anterior_1_Y = FrameHeight - TempHeadCSV(Row,3);
     Head_Midline_Anterior_1_Confidence = TempHeadCSV(Row,4);
@@ -43,15 +58,10 @@ function [Head_RawData, Head_Calculations, Axis_Angle, Column_Names] = ProcessHe
                         Head_Midline_Posterior_6_X, Head_Midline_Posterior_6_Y, Head_Midline_Posterior_6_Confidence];
 
     % Populate the column names for data readability
-    Column_Names.raw = ["Head_Midline_Anterior_1_X" , "Head_Midline_Anterior_1_Y" , "Head_Midline_Anterior_1_Confidence", ...
-                        "Head_Midline_2_X"          , "Head_Midline_2_Y"          , "Head_Midline_2_Confidence"         , ...
-                        "Head_Midline_3_X"          , "Head_Midline_3_Y"          , "Head_Midline_3_Confidence"         , ...
-                        "Head_Midline_4_X"          , "Head_Midline_4_Y"          , "Head_Midline_4_Confidence"         , ...
-                        "Head_Midline_5_X"          , "Head_Midline_5_Y"          , "Head_Midline_5_Confidence"         , ...
-                        "Head_Midline_Posterior_6_X", "Head_Midline_Posterior_6_Y", "Head_Midline_Posterior_6_Confidence"];
+    Column_Names.raw = getRawNames();
     
     if calculations == 'y'
-        %% HEAD LINE OF BEST FIT CALCULATIONS
+        % HEAD LINE OF BEST FIT CALCULATIONS
         %Calculate confidence value (by multiplying confidence of each point together)
         %Calculate average slope of all points
         ConfidenceArray = [Head_Midline_Anterior_1_Confidence,Head_Midline_2_Confidence,Head_Midline_3_Confidence,Head_Midline_4_Confidence,Head_Midline_5_Confidence,Head_Midline_Posterior_6_Confidence];
@@ -81,7 +91,22 @@ function [Head_RawData, Head_Calculations, Axis_Angle, Column_Names] = ProcessHe
         Head_Calculations = [Relative_Head_Angle, Head_Slope_Confidence];
 
         % Assemble string array of all calculation names
-        Column_Names.calculated  = ["Relative_Head_Angle", "Head_Slope_Confidence"];
+        Column_Names.calculated  = getCalNames();
+    elseif calculations ~= 'y' && usePadding == 1
+        Column_Names.calculated = getCalcNames();
+        Head_Calculations = zeros(1,length(Column_Names.calculated));
     end
 end
 
+% Use these two functions to handle requests for all names of the dataset
+function names = getRawNames()
+names = ["Head_Midline_Anterior_1_X" , "Head_Midline_Anterior_1_Y" , "Head_Midline_Anterior_1_Confidence", ...
+         "Head_Midline_2_X"          , "Head_Midline_2_Y"          , "Head_Midline_2_Confidence"         , ...
+         "Head_Midline_3_X"          , "Head_Midline_3_Y"          , "Head_Midline_3_Confidence"         , ...
+         "Head_Midline_4_X"          , "Head_Midline_4_Y"          , "Head_Midline_4_Confidence"         , ...
+         "Head_Midline_5_X"          , "Head_Midline_5_Y"          , "Head_Midline_5_Confidence"         , ...
+         "Head_Midline_Posterior_6_X", "Head_Midline_Posterior_6_Y", "Head_Midline_Posterior_6_Confidence"];
+end
+function names = getCalcNames()
+names = ["Relative_Head_Angle", "Head_Slope_Confidence"];
+end

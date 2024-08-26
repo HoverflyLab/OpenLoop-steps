@@ -20,7 +20,7 @@ end
 % Search via strings which models were used
 % Order of model search: wings, head, front legs, hind legs
 allModels = ["Wings", "Head", "FrontLegs", "HindLegs"];
-modelList = cell(1,length(models));
+modelList = cell(1,length(allModels));
 inputStrings = cell(1, length(allModels));
 inputDefaults = cell(1, length(allModels));
 
@@ -31,7 +31,7 @@ for i = 1:length(allModels)
     tempModelTest = tempModelTest(~cellfun('isempty', tempModelTest));
     % If we've found a match for a model, add to the list!
     if ~isempty(tempModelTest)
-        modelList{count} = models(i);
+        modelList{count} = allModels(i);
         inputStrings{count} = sprintf('Perform ''%s'' model calculations? y/n', allModels(i));
         inputDefaults{count} = 'y';
         count = count + 1;

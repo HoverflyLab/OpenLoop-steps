@@ -1,16 +1,32 @@
-function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle, Column_Names] = ProcessFrontLegsData(TempFrontlegsCSV, Row , FrameHeight, Axis_Angle, calculations)
+function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle, Column_Names] = ProcessFrontLegsData(usePadding, TempFrontlegsCSV, Row , FrameHeight, Axis_Angle, calculations)
 %PROCESSFRONTLEGSDATA Calculates Hinge-Distal Angle and Distance, + confidence : for Left and Right
 %   Detailed explanation goes here
 
-    %% IMPORTANT - DLC Y values are inverted so we need to take the Y
-    %value given from the resolution of the frame, this allows us to work with Y values that
-    %match standard graphing conventions. e.g. X value increases left to right, Y value increases bottom to top.
-    
     % Set these to 0 in case calculations aren't required by user
     Frontlegs_Calculations = 0;
     Column_Names.calculated = "No calculations made for front legs data";
 
-    %% Read in Frontlegs label data
+    % Check if we're using this function with data, if not, check if we want to
+    % pad the results with empty space to make it easier for the user's
+    % analysis scripts
+    if ~exist('TempFrontlegsCSV', 'var') && usePadding == 1
+        % Recreate the column names so the user can see what's missing
+        Column_Names.raw = getRawNames();
+        Column_Names.calculated = getCalcNames();
+        % Pad out zeros for the unused data
+        Frontlegs_RawData = zeros(1,length(column_Names.raw));
+        Frontlegs_Calculations = zeros(1,length(Column_Names.calculated));
+        % We were only padding out values, so go back to the main code
+        return
+    elseif ~exist('TempFrontlegsCSV', 'var') && usePadding ~= 1
+        return
+    end
+
+    % IMPORTANT - DLC Y values are inverted so we need to take the Y
+    %value given from the resolution of the frame, this allows us to work with Y values that
+    %match standard graphing conventions. e.g. X value increases left to right, Y value increases bottom to top.
+    
+    % Read in Frontlegs label data
     Frontlegs_Hinge_Right_X = TempFrontlegsCSV(Row,2);
     Frontlegs_Hinge_Right_Y = FrameHeight - TempFrontlegsCSV(Row,3);
     Frontlegs_Hinge_Right_Confidence = TempFrontlegsCSV(Row,4);
@@ -34,17 +50,14 @@ function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle, Column_Names] =
                          Frontlegs_Distal_Left_X , Frontlegs_Distal_Left_Y , Frontlegs_Distal_Left_Confidence];
 
     % Populate the column names for data readability
-    Column_Names.raw  = ["Frontlegs_Hinge_Right_X" , "Frontlegs_Hinge_Right_Y" , "Frontlegs_Hinge_Right_Confidence" , ...
-                         "Frontlegs_Distal_Right_X", "Frontlegs_Distal_Right_Y", "Frontlegs_Distal_Right_Confidence", ...
-                         "Frontlegs_Hinge_Left_X"  , "Frontlegs_Hinge_Left_Y"  , "Frontlegs_Hinge_Left_Confidence"  , ...
-                         "Frontlegs_Distal_Left_X" , "Frontlegs_Distal_Left_Y" , "Frontlegs_Distal_Left_Confidence"];
+    Column_Names.raw  = getRawNames();
 
-    %% FRONTLEGS CALCULATIONS
+    % FRONTLEGS CALCULATIONS
     %Calculate the angle of the leg from the Hinge to the Distal.
     %Calculate the distance from the Hinge point to the Distal.
     
     if calculations == 'y'
-        %% Angle of the Frontleg
+        % Angle of the Frontleg
         %Calculate the Slope Height and Width of the Hinge point to Distal point.
         HingeDistal_Width_Right = Frontlegs_Distal_Right_X - Frontlegs_Hinge_Right_X;
         HingeDistal_Height_Right = Frontlegs_Distal_Right_Y - Frontlegs_Hinge_Right_Y;
@@ -76,7 +89,7 @@ function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle, Column_Names] =
         %Calculate HingeDistal_Angle_Confidence
         HingeDistal_Angle_Left_Confidence = Frontlegs_Hinge_Left_Confidence * Frontlegs_Distal_Left_Confidence;
         
-        %% Distance from Hinge to Distal
+        % Distance from Hinge to Distal
         
         %Calculate HingeDistal_Distance
         %Calculate HingeDistal_Distance_Confidence
@@ -96,10 +109,23 @@ function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle, Column_Names] =
                                    HingeDistal_Distance_Left , HingeDistal_Distance_Left_Confidence];
 
         % Assemble string array of all calculation names
-        Column_Names.calculated = ["HingeDistal_Angle_Right"   , "HingeDistal_Angle_Right_Confidence"   , ...
-                                   "HingeDistal_Distance_Right", "HingeDistal_Distance_Right_Confidence", ...
-                                   "HingeDistal_Angle_Left"    , "HingeDistal_Angle_Left_Confidence"    , ...
-                                   "HingeDistal_Distance_Left" , "HingeDistal_Distance_Left_Confidence"];
+        Column_Names.calculated = getCalcNames();
+    elseif calculations ~= 'y' && usePadding == 1
+        Column_Names.calculated = getCalcNames();
+        Frontlegs_Calculations = zeros(1,length(Column_Names.calculated));
     end
 end
 
+% Use these two functions to handle requests for all names of the dataset
+function names = getRawNames()
+names = ["Frontlegs_Hinge_Right_X" , "Frontlegs_Hinge_Right_Y" , "Frontlegs_Hinge_Right_Confidence" , ...
+         "Frontlegs_Distal_Right_X", "Frontlegs_Distal_Right_Y", "Frontlegs_Distal_Right_Confidence", ...
+         "Frontlegs_Hinge_Left_X"  , "Frontlegs_Hinge_Left_Y"  , "Frontlegs_Hinge_Left_Confidence"  , ...
+         "Frontlegs_Distal_Left_X" , "Frontlegs_Distal_Left_Y" , "Frontlegs_Distal_Left_Confidence"];
+end
+function names = getCalcNames()
+names = ["HingeDistal_Angle_Right"   , "HingeDistal_Angle_Right_Confidence"   , ...
+         "HingeDistal_Distance_Right", "HingeDistal_Distance_Right_Confidence", ...
+         "HingeDistal_Angle_Left"    , "HingeDistal_Angle_Left_Confidence"    , ...
+         "HingeDistal_Distance_Left" , "HingeDistal_Distance_Left_Confidence"];
+end

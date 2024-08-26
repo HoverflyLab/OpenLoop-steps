@@ -18,17 +18,17 @@
 % Note: Confidence values for calculations are obtained by multiplying the relevant confidence values together.
 % ticktime_blocks are equal to the trial start time since epoch 
 
-function returnStatus = runCalculationsAndPackage(usePadding) %#ok<INUSD>v Used in an eval statement
+function returnStatus = runCalculationsAndPackage(usePadding)
 % padOut: Boolean: Represents whether or not to pad missing stimuli columns
 % Wrap function in try / catch for error handling
-try
+%try
 
 % Let the user know what is going on
 disp('We will now begin creating the VideoName_DLC_Analysis.mat file')
 
 % NEEDS TO BE ACCURATE
 VideoResolution = inputdlg({'Enter video width:', 'Enter video height:'}, ...
-    'Video Resolution', [1 45], {'320', '240'}); %#ok<NASGU> Used to invert Y values by using the frame height, error supressed as value is used in an 'eval' statement later     
+    'Video Resolution', [1 45], {'720', '540'}); %#ok<NASGU> Used to invert Y values by using the frame height, error supressed as value is used in an 'eval' statement later     
 videoType = inputdlg('Enter video type:', ...
     'Choose video extension', [1 45], ".mp4");   % Used to identify video files
 VideosAnalysed = 0;                              % Counter used to display progress to user
@@ -139,26 +139,30 @@ for video = 1:size(videoList, 1)
             key = allModels(model);
             % Use ismember to determine if the current model was actually
             % used by the user
-            if ismember(key, usedModelList)
-                useCalcs = calculationChoices{model}; %#ok<NASGU> used in an eval statement
+            if ismember(key, vertcat(usedModelList{:}))
+
+                if any(ismember(vertcat(usedModelList{:}), key))
+                    disp("heyyyy")
+                    test = ismember(vertcat(usedModelList{:}), key);
+                    usedModelList(test)
+                end
+                useCalcs = calculationChoices{model};
                 [Model_RawData, Model_Calculations, Axis_Angle, Column_Names] = ...
                     eval("Process" + key + "Data(usePadding, Temp" + key + "CSV, frame, str2double(VideoResolution{2}), Axis_Angle, useCalcs);"); %#ok<ASGLU>
                 % Append the different RawData and Calculations together, while maintaining the expected order.
                 RawData = [RawData, Model_RawData]; %#ok<AGROW> Variable size due to user choice and file contents, too annoying to predict
-                if Model_Calculations ~= 0
+                if useCalcs == 'y' || usePadding == 1
                     Calculations = [Calculations, Model_Calculations]; %#ok<AGROW> As above
                 end
             else
                 % If the model was not used by the user, double check if we
                 % wanted to use padding for it or not
-                if usePadding == 0
+                if usePadding ~= 1
                     continue
                 end
-                [Model_RawData, Model_Calculations, Column_Names] = eval("Process" + key + "Data(usePadding)");
+                [Model_RawData, Model_Calculations, ~, Column_Names] = eval("Process" + key + "Data(usePadding)");
                 RawData = [RawData, Model_RawData]; %#ok<AGROW> Variable size due to user choice and file contents, too annoying to predict
-                if Model_Calculations ~= 0
-                    Calculations = [Calculations, Model_Calculations]; %#ok<AGROW> As above
-                end
+                Calculations = [Calculations, Model_Calculations]; %#ok<AGROW> As above
             end
             % Append collumn names in order of appearance
             % Supressed warning of vars not pre-allocating space as it is
@@ -166,7 +170,9 @@ for video = 1:size(videoList, 1)
             % scripts.
             if frame == 1
                 dataHeaders = [dataHeaders, Column_Names.raw]; %#ok<AGROW>
-                calcHeaders = [calcHeaders, Column_Names.calculated]; %#ok<AGROW>
+                if useCalcs == 'y' || usePadding == 1
+                    calcHeaders = [calcHeaders, Column_Names.calculated]; %#ok<AGROW>
+                end
             end
         end
 
@@ -251,11 +257,11 @@ disp('.mat file saved');
 returnStatus = 1;
 
 % Just in case anything goes wrong, bamf out of code and tell user
-catch error
-    disp(error)
-    returnStatus = 0;
-    return
-end
+% catch error
+%     disp(error)
+%     returnStatus = 0;
+%     returnS
+% end
 
 
 function month = convertMonth(month)

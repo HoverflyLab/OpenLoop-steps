@@ -139,7 +139,7 @@ for video = 1:size(videoList, 1)
             key = allModels(model);
             % Use ismember to determine if the current model was actually
             % used by the user
-            if ismember(vertcat(usedModelList{:}), key)
+            if any(ismember(vertcat(usedModelList{:}), key))
                 % The indicies from the whole model list is not guaranteed
                 % to match the actual model list, so we find the right index
                 index = ismember(vertcat(usedModelList{:}), key);
@@ -193,9 +193,6 @@ for video = 1:size(videoList, 1)
                 DLC_Calculations{frame + 1, i} = Calculations(i);
         end
     end
-
-    % Do squishing of data and calculations here, JAXON
-    
     
     % Create data_block using raw data points e.g. x,y,conf.
     eval(sprintf('data_block%i = DLC_RawData;',analysisCounter));
@@ -259,7 +256,6 @@ returnStatus = 1;
 %     returnStatus = 0;
 %     returnS
 % end
-
 
 function month = convertMonth(month)
 month = lower(month);

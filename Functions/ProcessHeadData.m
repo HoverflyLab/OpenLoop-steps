@@ -9,8 +9,10 @@ function [Head_RawData, Head_Calculations, Axis_Angle, Column_Names] = ProcessHe
             Column_Names.raw = getRawNames();
             Column_Names.calculated = getCalcNames();
             % Pad out zeros for the unused data
-            Head_RawData = zeros(1,length(column_Names.raw));
+            Head_RawData = zeros(1,length(Column_Names.raw));
             Head_Calculations = zeros(1,length(Column_Names.calculated));
+            % Prevent errors from occuring 
+            Axis_Angle = 0;
             % We were only padding out values, so go back to the main code
             return
         elseif ~exist('TempHeadCSV', 'var') && usePadding ~= 1

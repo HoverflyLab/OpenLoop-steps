@@ -18,16 +18,17 @@
 % Note: Confidence values for calculations are obtained by multiplying the relevant confidence values together.
 % ticktime_blocks are equal to the trial start time since epoch 
 
-function returnStatus = runCalculationsAndPackage()
+function returnStatus = runCalculationsAndPackage(usePadding)
+% padOut: Boolean: Represents whether or not to pad missing stimuli columns
 % Wrap function in try / catch for error handling
-try
+%try
 
 % Let the user know what is going on
 disp('We will now begin creating the VideoName_DLC_Analysis.mat file')
 
 % NEEDS TO BE ACCURATE
 VideoResolution = inputdlg({'Enter video width:', 'Enter video height:'}, ...
-    'Video Resolution', [1 45], {'320', '240'}); %#ok<NASGU> Used to invert Y values by using the frame height, error supressed as value is used in an 'eval' statement later     
+    'Video Resolution', [1 45], {'720', '540'}); %#ok<NASGU> Used to invert Y values by using the frame height, error supressed as value is used in an 'eval' statement later     
 videoType = inputdlg('Enter video type:', ...
     'Choose video extension', [1 45], ".mp4");   % Used to identify video files
 VideosAnalysed = 0;                              % Counter used to display progress to user
@@ -52,8 +53,8 @@ end
 % For first video, determine how many models are actually used
 % This is kinda really dodgy, keep an open mind to fix this shit later
 csvFileList = dir(fullfile([inputFolderPath, '/*.csv']));
-[modelList, inputStr, inputDef, boxSize] = findModelsUsed(videoList(1), csvFileList);
-modelListSize = size(modelList, 2);
+[allModels, usedModelList, inputStr, inputDef, boxSize] = findModelsUsed(videoList(1), csvFileList);
+modelListSize = size(usedModelList, 2);
 
 % Show popup asking user which calculations they would like
 % (And are actually available to them)
@@ -93,9 +94,9 @@ for video = 1:size(videoList, 1)
         if not(isempty(strfind(csvFileList(j).name,TempFileName)))
             for k = 1:modelListSize
                 % If the csv contains the keyword e.g. Wings, Head, Hindlegs, Frontlegs.
-                if not(isempty(regexpi(csvFileList(j).name,modelList{k}, 'ONCE')))
-                    TempCSVFiles(k).keyword = modelList{k};
-                    TempCSVFiles(k).filepath = strcat(videoList(video).folder,'/',csvFileList(j).name);
+                if not(isempty(regexpi(csvFileList(j).name,usedModelList{k}, 'ONCE')))
+                    TempCSVFiles(k).keyword = usedModelList{k}; %#ok<AGROW> Won't pre-allocate space in advance as that makes this whole script more error prone
+                    TempCSVFiles(k).filepath = strcat(videoList(video).folder,'/',csvFileList(j).name); %#ok<AGROW>
                 end
             end
         end
@@ -118,9 +119,9 @@ for video = 1:size(videoList, 1)
     end
 
     for model = 1:modelListSize
-        eval("Temp" + modelList(model) + "CSV = csvread(TempCSVFiles(" + model + ").filepath,3,0);");
+        eval("Temp" + usedModelList(model) + "CSV = csvread(TempCSVFiles(" + model + ").filepath,3,0);");
         % Get total amount of frames from current video
-        eval("[Totalframes,~] = size(Temp" + modelList(model) + "CSV);");
+        eval("[Totalframes,~] = size(Temp" + usedModelList(model) + "CSV);");
     end
 
     % Initialise entire data set with arbitrary values, stops the script from continuously allocating memory later on.
@@ -134,15 +135,31 @@ for video = 1:size(videoList, 1)
         RawData = [];
         Calculations = [];
         Axis_Angle = 0; %#ok<NASGU> used in an eval statement
-        for model = 1:modelListSize
-            key = modelList(model);
-            useCalcs = calculationChoices{model}; %#ok<NASGU> used in an eval statement
-            [Model_RawData, Model_Calculations, Axis_Angle, Column_Names] = ...
-                eval("Process" + key + "Data(Temp" + key + "CSV, frame, str2double(VideoResolution{2}), Axis_Angle, useCalcs);"); %#ok<ASGLU>
-            % Append the different RawData and Calculations together, while maintaining the expected order.
-            RawData = [RawData, Model_RawData];
-            if Model_Calculations ~= 0
-                Calculations = [Calculations, Model_Calculations];
+        for model = 1:length(allModels)
+            key = allModels(model);
+            % Use ismember to determine if the current model was actually
+            % used by the user
+            if any(ismember(vertcat(usedModelList{:}), key))
+                % The indicies from the whole model list is not guaranteed
+                % to match the actual model list, so we find the right index
+                index = ismember(vertcat(usedModelList{:}), key);
+                useCalcs = calculationChoices{index};
+                [Model_RawData, Model_Calculations, Axis_Angle, Column_Names] = ...
+                    eval("Process" + key + "Data(usePadding, Temp" + key + "CSV, frame, str2double(VideoResolution{2}), Axis_Angle, useCalcs);"); %#ok<ASGLU>
+                % Append the different RawData and Calculations together, while maintaining the expected order.
+                RawData = [RawData, Model_RawData]; %#ok<AGROW> Variable size due to user choice and file contents, too annoying to predict
+                if useCalcs == 'y' || usePadding == 1
+                    Calculations = [Calculations, Model_Calculations]; %#ok<AGROW> As above
+                end
+            else
+                % If the model was not used by the user, double check if we
+                % wanted to use padding for it or not
+                if usePadding ~= 1
+                    continue
+                end
+                [Model_RawData, Model_Calculations, ~, Column_Names] = eval("Process" + key + "Data(usePadding)");
+                RawData = [RawData, Model_RawData]; %#ok<AGROW> Variable size due to user choice and file contents, too annoying to predict
+                Calculations = [Calculations, Model_Calculations]; %#ok<AGROW> As above
             end
             % Append collumn names in order of appearance
             % Supressed warning of vars not pre-allocating space as it is
@@ -150,7 +167,9 @@ for video = 1:size(videoList, 1)
             % scripts.
             if frame == 1
                 dataHeaders = [dataHeaders, Column_Names.raw]; %#ok<AGROW>
-                calcHeaders = [calcHeaders, Column_Names.calculated]; %#ok<AGROW>
+                if useCalcs == 'y' || usePadding == 1
+                    calcHeaders = [calcHeaders, Column_Names.calculated]; %#ok<AGROW>
+                end
             end
         end
 
@@ -174,7 +193,6 @@ for video = 1:size(videoList, 1)
                 DLC_Calculations{frame + 1, i} = Calculations(i);
         end
     end
-    
     
     % Create data_block using raw data points e.g. x,y,conf.
     eval(sprintf('data_block%i = DLC_RawData;',analysisCounter));
@@ -233,12 +251,11 @@ disp('.mat file saved');
 returnStatus = 1;
 
 % Just in case anything goes wrong, bamf out of code and tell user
-catch error
-    disp(error)
-    returnStatus = 0;
-    return
-end
-
+% catch error
+%     disp(error)
+%     returnStatus = 0;
+%     returnS
+% end
 
 function month = convertMonth(month)
 month = lower(month);

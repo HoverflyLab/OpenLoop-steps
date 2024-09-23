@@ -1,4 +1,4 @@
-function [modelList, inputStrings, inputDefaults, boxSize, keykey] = findModelsUsed(video, csvFiles)
+function [allModels, modelList, inputStrings, inputDefaults, boxSize] = findModelsUsed(video, csvFiles)
 % function findModelsUsed: Using a single video, determine which models 
 % the user employed when doing their DLC analysis
 
@@ -19,20 +19,20 @@ end
 
 % Search via strings which models were used
 % Order of model search: wings, head, front legs, hind legs
-models = ["Wings", "Head", "FrontLegs", "HindLegs"];
-modelList = cell(1,length(models));
-inputStrings = cell(1, length(models));
-inputDefaults = cell(1, length(models));
+allModels = ["Wings", "Head", "FrontLegs", "HindLegs"];
+modelList = cell(1,length(allModels));
+inputStrings = cell(1, length(allModels));
+inputDefaults = cell(1, length(allModels));
 
 % Loop over all models
 count = 1;
-for i = 1:length(models)
-    tempModelTest = regexpi(allFiles, models(i));
+for i = 1:length(allModels)
+    tempModelTest = regexpi(allFiles, allModels(i));
     tempModelTest = tempModelTest(~cellfun('isempty', tempModelTest));
     % If we've found a match for a model, add to the list!
     if ~isempty(tempModelTest)
-        modelList{count} = models(i);
-        inputStrings{count} = sprintf('Perform ''%s'' model calculations? y/n', models(i));
+        modelList{count} = allModels(i);
+        inputStrings{count} = sprintf('Perform ''%s'' model calculations? y/n', allModels(i));
         inputDefaults{count} = 'y';
         count = count + 1;
     end

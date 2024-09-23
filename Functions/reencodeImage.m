@@ -14,7 +14,7 @@ MAT_Array = dir(fullfile(inputParameterPath, '*.mat'));
 MAT_FileArray = struct2cell(MAT_Array);
 MAT_FileArray = MAT_FileArray(1,:);
 
-% Get list of all images\
+% Get list of all images
 videoType = inputdlg('Enter image type:', ...
     'Choose video extension', [1 45], ".jpg"); 
 imageList = dir(fullfile(inputFolderPath, ['*' videoType]));
@@ -78,7 +78,7 @@ for filenum = 1:m
         movefile(imagePaths{imageNo + startMomentIndex}, newPath{imageNo})
     end
 
-    %s is a space ' ' and 34 is a " to encapsulate text incase there are spaces in the file path
+    % s is a space ' ' and 34 is a " to encapsulate text incase there are spaces in the file path
 
     ffFilename = cell2mat(MAT_FileArray(filenum));
     ffFilename = split(ffFilename, '.mat');

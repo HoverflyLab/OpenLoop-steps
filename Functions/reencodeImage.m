@@ -58,6 +58,10 @@ for filenum = 1:m
     
     % Find time moment when trigger condition has been met
     startMomentIndex = find(diff(startConditionMet)==1, 1, 'first');
+    if isempty(startMomentIndex)
+        fsprintf("No matching frames found for video %s", MAT_FileArray(filenum))
+        continue
+    end
     % Determine which frame timestamp is closer to the actual start of the
     % stimuli
     t0 = abs(startTime - str2double(timeStamps{startMomentIndex}));

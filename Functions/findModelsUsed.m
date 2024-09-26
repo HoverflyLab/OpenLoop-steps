@@ -18,8 +18,8 @@ for i = 1:length(singleVidFiles)
 end
 
 % Search via strings which models were used
-% Order of model search: wings, head, front legs, hind legs
-allModels = ["Wings", "Head", "FrontLegs", "HindLegs"];
+% Order of model search: wings, head, hind legs, front legs
+allModels = ["Wings", "Head", "HindLegs", "FrontLegs"];
 modelList = cell(1,length(allModels));
 inputStrings = cell(1, length(allModels));
 inputDefaults = cell(1, length(allModels));

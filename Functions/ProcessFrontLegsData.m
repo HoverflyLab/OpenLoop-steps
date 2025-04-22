@@ -44,6 +44,7 @@ function [Frontlegs_RawData, Frontlegs_Calculations, Axis_Angle, Column_Names] =
     Frontlegs_Distal_Left_X = TempFrontlegsCSV(Row,11);
     Frontlegs_Distal_Left_Y = FrameHeight - TempFrontlegsCSV(Row,12);
     Frontlegs_Distal_Left_Confidence = TempFrontlegsCSV(Row,13);
+
     
     % Populate RawData into an array with the data provided by each label.
     Frontlegs_RawData = [Frontlegs_Hinge_Right_X , Frontlegs_Hinge_Right_Y , Frontlegs_Hinge_Right_Confidence , ...

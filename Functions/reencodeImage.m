@@ -16,9 +16,9 @@ MAT_FileArray = MAT_FileArray(1,:);
 
 % Get list of all images
 videoType = inputdlg('Enter image type:', ...
-    'Choose video extension', [1 45], ".jpg"); 
-imageList = dir(fullfile(inputFolderPath, ['*' videoType]));
+    'Choose video extension', [1 45], {'.jpg'});
 
+imageList = dir(fullfile(inputFolderPath, ['*' videoType{1}]));
 % Get all picture names and paths into an array
 imageNames = arrayfun(@(x) x.name, imageList, 'UniformOutput', false);
 imagePaths = arrayfun(@(x) x.folder, imageList, 'UniformOutput', false);
@@ -32,7 +32,7 @@ for imageNo = 1:imageCount
 end
 
 % Get all file times as a string
-timeStamps = cellfun(@(x) strrep(strrep(x, '_', ''), '.bmp', ''), imageNames, 'UniformOutput', false);
+timeStamps = cellfun(@(x) strrep(strrep(x, '_', ''), videoType{1}, ''), imageNames, 'UniformOutput', false);
 
 % Loop over each .mat file to make videos
 for filenum = 1:m
@@ -58,6 +58,10 @@ for filenum = 1:m
     
     % Find time moment when trigger condition has been met
     startMomentIndex = find(diff(startConditionMet)==1, 1, 'first');
+    if isempty(startMomentIndex)
+        fsprintf("No matching frames found for video %s", MAT_FileArray(filenum))
+        continue
+    end
     % Determine which frame timestamp is closer to the actual start of the
     % stimuli
     t0 = abs(startTime - str2double(timeStamps{startMomentIndex}));
@@ -70,7 +74,7 @@ for filenum = 1:m
     % Rename all files to something easy for ffmpeg to work with
     newPath = cell(stopMomentIndex - startMomentIndex);
     for imageNo = 1:(stopMomentIndex - startMomentIndex) 
-        newPath{imageNo} = string(inputFolderPath) + "/recording" + num2str(imageNo) + ".bmp";
+        newPath{imageNo} = string(inputFolderPath) + "/recording" + num2str(imageNo) + convertCharsToStrings(videoType{1});
         movefile(imagePaths{imageNo + startMomentIndex}, newPath{imageNo})
     end
 
@@ -83,7 +87,7 @@ for filenum = 1:m
     % Take in all images (in chronological order) and make a 100 FPS video
     % command = 'ffmpeg -i "' + inputFolderPath + 'recording%d.jpg" -c:v libx264 "' ...
     %     + ffoutput + '" -r 100 test.mp4';
-    command = ['ffmpeg -i ', 34, inputFolderPath, '/recording%d.bmp', 34, ...
+    command = ['ffmpeg -i ', 34, inputFolderPath, ['/recording%d' videoType{1}], 34, ...
         ' -c:v libx264 ', 34, ffoutput, 34, ...
         ' -r 100'];   
     [~, ~] = system(command, '-echo');

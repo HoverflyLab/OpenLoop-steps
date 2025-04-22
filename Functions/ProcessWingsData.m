@@ -97,7 +97,7 @@ function [Wings_RawData, Wings_Calculations, Axis_Angle, Column_Names] = Process
     
         
         % Calculate Wing Beat Amplitudes
-        %calculates the arctan and returns the answer in degrees
+        % calculates the arctan and returns the answer in degrees
         WBA_Right = atand(WBA_SlopeWidth_Right/WBA_SlopeHeight_Right);
         if(WBA_SlopeHeight_Right >= 0)
             WBA_Right = 180 - abs(WBA_Right - Axis_Angle);                   

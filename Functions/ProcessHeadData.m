@@ -93,7 +93,7 @@ function [Head_RawData, Head_Calculations, Axis_Angle, Column_Names] = ProcessHe
         Head_Calculations = [Relative_Head_Angle, Head_Slope_Confidence];
 
         % Assemble string array of all calculation names
-        Column_Names.calculated  = getCalNames();
+        Column_Names.calculated  = getCalcNames();
     elseif calculations ~= 'y' && usePadding == 1
         Column_Names.calculated = getCalcNames();
         Head_Calculations = zeros(1,length(Column_Names.calculated));

@@ -19,7 +19,7 @@ end
 
 % Search via strings which models were used
 % Order of model search: wings, head, hind legs, front legs
-allModels = ["Wings", "Head", "HindLegs", "FrontLegs"];
+allModels = ["Wings", "Head", "FrontLegs", "HindLegs"];
 modelList = cell(1,length(allModels));
 inputStrings = cell(1, length(allModels));
 inputDefaults = cell(1, length(allModels));
